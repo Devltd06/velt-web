@@ -134,9 +134,6 @@ export default function Home() {
             <Link href="/privacy" className="hover:text-blue-500">
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-blue-500">
-              Terms
-            </Link>
             <Link href="/signup" className="hover:text-blue-500">
               Sign up
             </Link>
