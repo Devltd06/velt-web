@@ -1,4 +1,3 @@
-// src/app/page.tsx
 "use client";
 
 import Image from "next/image";
@@ -7,6 +6,16 @@ import { FaRocket, FaLock, FaWallet, FaTwitter, FaInstagram, FaEnvelope } from "
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
+  // Optional: Example payload if you want to test passing data to ListerPlan
+  const listerPlanPayload = {
+    email: "demo@velt.com",
+    username: "demoUser",
+    fullName: "Demo User",
+    priceGHS: 50,
+    plan: "publisher_monthly",
+  };
+  const listerPlanQuery = encodeURIComponent(JSON.stringify(listerPlanPayload));
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-white transition">
       {/* Navbar */}
@@ -43,19 +52,30 @@ export default function Home() {
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
             The all-in-one platform to connect, monetize, and grow your audience. Pick a plan, sign up, and manage subscriptions effortlessly.
           </p>
-          <div className="flex justify-center gap-4">
+
+          <div className="flex justify-center flex-wrap gap-4">
+            {/* Existing buttons */}
             <Link
               href="/signup"
               className="bg-blue-600 px-6 py-3 rounded-lg shadow-lg hover:bg-blue-500 transition"
             >
               Get Started
             </Link>
+
             <a
               href="#features"
               className="border border-blue-600 px-6 py-3 rounded-lg hover:bg-blue-600 hover:text-white transition"
             >
               Learn More
             </a>
+
+            {/* ✅ New Button: Go to Lister Plan */}
+            <Link
+              href="/ListerPlan"
+              className="bg-green-600 px-6 py-3 rounded-lg shadow-lg hover:bg-green-500 transition"
+            >
+              Lister Plan
+            </Link>
           </div>
         </div>
       </section>
