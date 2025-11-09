@@ -1,29 +1,20 @@
-// src/app/page.tsx
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FaRocket, FaLock, FaWallet, FaTwitter, FaInstagram, FaEnvelope } from "react-icons/fa";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
-  const router = useRouter();
-
-  const openListerPlan = () => {
-    // Example payload — your app should pass real user data when opening this URL.
-    const payload = {
-      email: "tester@velt.com",
-      username: "tester",
-      fullName: "Test User",
-      invoiceId: `demo-invoice-${Date.now()}`,
-      priceGHS: 50,
-      returnDeepLink: "velt://listerplan/complete",
-    };
-    const encoded = encodeURIComponent(JSON.stringify(payload));
-    const url = `/ListerPlan?data=${encoded}`;
-    router.push(url);
+  // Optional: Example payload if you want to test passing data to ListerPlan
+  const listerPlanPayload = {
+    email: "demo@velt.com",
+    username: "demoUser",
+    fullName: "Demo User",
+    priceGHS: 50,
+    plan: "publisher_monthly",
   };
+  const listerPlanQuery = encodeURIComponent(JSON.stringify(listerPlanPayload));
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-white transition">
@@ -39,7 +30,6 @@ export default function Home() {
             <a href="#features" className="hover:text-blue-500 transition">Features</a>
             <a href="#about" className="hover:text-blue-500 transition">About</a>
             <a href="#contact" className="hover:text-blue-500 transition">Contact</a>
-            <Link href="/ListerPlan" className="hover:text-blue-500 transition">Lister Plan</Link>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -62,7 +52,9 @@ export default function Home() {
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
             The all-in-one platform to connect, monetize, and grow your audience. Pick a plan, sign up, and manage subscriptions effortlessly.
           </p>
-          <div className="flex justify-center gap-4">
+
+          <div className="flex justify-center flex-wrap gap-4">
+            {/* Existing buttons */}
             <Link
               href="/signup"
               className="bg-blue-600 px-6 py-3 rounded-lg shadow-lg hover:bg-blue-500 transition"
@@ -77,14 +69,13 @@ export default function Home() {
               Learn More
             </a>
 
-            {/* NEW: button to open the ListerPlan payment page with example payload */}
-            <button
-              onClick={openListerPlan}
-              className="bg-emerald-600 px-6 py-3 rounded-lg shadow-lg hover:bg-emerald-500 transition text-white"
-              title="Open Lister Plan payment page (demo)"
+            {/* ✅ New Button: Go to Lister Plan */}
+            <Link
+              href={`/ListerPlan?data=${listerPlanQuery}`}
+              className="bg-green-600 px-6 py-3 rounded-lg shadow-lg hover:bg-green-500 transition"
             >
               Lister Plan
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -138,14 +129,13 @@ export default function Home() {
             </a>
           </p>
           <div className="flex items-center justify-center gap-6 text-xl">
-            <a href="https://twitter.com" target="_blank" className="hover:text-blue-500" rel="noreferrer">
+            <a href="https://twitter.com" target="_blank" className="hover:text-blue-500">
               <FaTwitter />
             </a>
             <a
               href="https://www.instagram.com/velt_app?igsh=MXc5ZWEwajR1bm81dw%3D%3D&utm_source=qr"
               target="_blank"
               className="hover:text-pink-500"
-              rel="noreferrer"
             >
               <FaInstagram />
             </a>
@@ -173,4 +163,5 @@ export default function Home() {
     </div>
   );
 }
+
 

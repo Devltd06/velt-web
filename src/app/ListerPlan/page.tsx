@@ -4,6 +4,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
+/**
+ * ListerPlan client page
+ * - MUST be a client component ("use client") because it uses next/navigation hooks and browser APIs
+ * - Keep all browser-only logic inside useEffect / event handlers
+ */
+
 export default function ListerPlanPage() {
   const router = useRouter();
   const search = useSearchParams();
@@ -12,18 +18,19 @@ export default function ListerPlanPage() {
   const [payData, setPayData] = useState<any>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  // Parse data passed from the mobile app
+  // parse payload (only in browser)
   useEffect(() => {
     if (!dataParam) return;
     try {
       const parsed = JSON.parse(decodeURIComponent(dataParam));
       setPayData(parsed);
     } catch (e) {
-      console.error("Failed to parse data param", e);
+      console.error("Failed to parse ListerPlan data param:", e);
+      setPayData(null);
     }
   }, [dataParam]);
 
-  // Load Paystack script
+  // lazy-load Paystack inline script on client
   useEffect(() => {
     if ((window as any).PaystackPop) {
       setScriptLoaded(true);
@@ -33,16 +40,20 @@ export default function ListerPlanPage() {
     s.src = "https://js.paystack.co/v1/inline.js";
     s.async = true;
     s.onload = () => setScriptLoaded(true);
-    s.onerror = () => setScriptLoaded(false);
+    s.onerror = () => {
+      console.error("Failed to load Paystack script");
+      setScriptLoaded(false);
+    };
     document.body.appendChild(s);
     return () => {
-      if (s.parentNode) s.parentNode.removeChild(s);
+      try {
+        if (s.parentNode) s.parentNode.removeChild(s);
+      } catch {}
     };
   }, []);
 
   const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
 
-  // Data from app payload
   const priceGHS = Number(payData?.priceGHS ?? 50);
   const amountInPesewas = useMemo(() => Math.round(priceGHS * 100), [priceGHS]);
   const reference = useMemo(() => `VELT-LISTER-${Date.now()}-${Math.floor(Math.random() * 1e6)}`, []);
@@ -51,7 +62,7 @@ export default function ListerPlanPage() {
 
   const handlePay = () => {
     if (!scriptLoaded || !(window as any).PaystackPop) {
-      alert("Paystack is still loading. Please wait a few seconds.");
+      alert("Payment system still loading. Please wait a second and try again.");
       return;
     }
 
@@ -71,39 +82,50 @@ export default function ListerPlanPage() {
       },
       callback: async (resp: any) => {
         try {
+          // call server verify route (server handles Paystack secret)
           const res = await fetch("/api/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reference: resp.reference }),
           });
-          const json = await res.json();
+          const json = await res.json().catch(() => null);
           const paid = json?.paid ?? false;
-          const deep = json?.data?.metadata?.returnDeepLink || returnDeepLink || "";
+          const deep = (json?.data?.metadata?.returnDeepLink) || returnDeepLink || "";
           const status = paid ? "paid" : "unknown";
 
           if (deep) {
-            const appUrl = `${deep}?status=${status}&invoiceId=${invoiceId || ""}&reference=${resp.reference}`;
+            // deep-link back to app
+            const appUrl = `${deep}${deep.includes("?") ? "&" : "?"}status=${encodeURIComponent(status)}&invoiceId=${encodeURIComponent(invoiceId || "")}&reference=${encodeURIComponent(resp.reference)}`;
             window.location.href = appUrl;
+            return;
           } else {
             router.push("/ListerPlan/success");
+            return;
           }
         } catch (err) {
-          console.error(err);
-          alert("Verification failed. Please return to the app and refresh.");
+          console.error("Error verifying payment:", err);
+          alert("Verification failed — return to the app and refresh.");
         }
       },
-      onClose: () => alert("Payment cancelled."),
+      onClose: () => {
+        // user closed checkout
+      },
     });
 
-    handler.openIframe();
+    try {
+      handler.openIframe();
+    } catch (err) {
+      console.error("Error opening Paystack iframe:", err);
+      alert("Could not open payment window.");
+    }
   };
 
   if (!payData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Missing payment details</h1>
-          <p>Open this page through the Velt app.</p>
+        <div className="text-center p-6">
+          <h1 className="text-2xl font-bold mb-2">Lister Plan</h1>
+          <p className="text-sm text-gray-300">Open this page through the app to pay for the Lister plan.</p>
         </div>
       </div>
     );
@@ -113,10 +135,10 @@ export default function ListerPlanPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
       <div className="bg-gray-800 p-8 rounded-md text-center w-full max-w-md">
         <h1 className="text-3xl font-bold mb-2">Lister Plan</h1>
-        <p className="text-gray-300 mb-4">Monthly Subscription (Publish Listings)</p>
+        <p className="text-gray-300 mb-4">Monthly subscription to publish listings</p>
         <p className="text-2xl font-semibold mb-2">GHS {priceGHS.toFixed(2)}</p>
         <p className="text-gray-400 mb-6">for {email}</p>
-        <button onClick={handlePay} className="bg-blue-600 w-full py-3 rounded font-semibold">
+        <button onClick={handlePay} className="bg-blue-600 w-full py-3 mt-2 rounded font-semibold">
           Pay with Paystack
         </button>
         <p className="text-xs text-gray-500 mt-4">Powered by Velt & Paystack</p>
@@ -124,3 +146,4 @@ export default function ListerPlanPage() {
     </div>
   );
 }
+
