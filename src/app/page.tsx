@@ -3,10 +3,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FaRocket, FaLock, FaWallet, FaTwitter, FaInstagram, FaEnvelope } from "react-icons/fa";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
+  const router = useRouter();
+
+  const openListerPlan = () => {
+    // Example payload — your app should pass real user data when opening this URL.
+    const payload = {
+      email: "tester@velt.com",
+      username: "tester",
+      fullName: "Test User",
+      invoiceId: `demo-invoice-${Date.now()}`,
+      priceGHS: 50,
+      returnDeepLink: "velt://listerplan/complete",
+    };
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    const url = `/ListerPlan?data=${encoded}`;
+    router.push(url);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-white transition">
       {/* Navbar */}
@@ -21,6 +39,7 @@ export default function Home() {
             <a href="#features" className="hover:text-blue-500 transition">Features</a>
             <a href="#about" className="hover:text-blue-500 transition">About</a>
             <a href="#contact" className="hover:text-blue-500 transition">Contact</a>
+            <Link href="/ListerPlan" className="hover:text-blue-500 transition">Lister Plan</Link>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -50,12 +69,22 @@ export default function Home() {
             >
               Get Started
             </Link>
+
             <a
               href="#features"
               className="border border-blue-600 px-6 py-3 rounded-lg hover:bg-blue-600 hover:text-white transition"
             >
               Learn More
             </a>
+
+            {/* NEW: button to open the ListerPlan payment page with example payload */}
+            <button
+              onClick={openListerPlan}
+              className="bg-emerald-600 px-6 py-3 rounded-lg shadow-lg hover:bg-emerald-500 transition text-white"
+              title="Open Lister Plan payment page (demo)"
+            >
+              Lister Plan
+            </button>
           </div>
         </div>
       </section>
@@ -109,13 +138,14 @@ export default function Home() {
             </a>
           </p>
           <div className="flex items-center justify-center gap-6 text-xl">
-            <a href="https://twitter.com" target="_blank" className="hover:text-blue-500">
+            <a href="https://twitter.com" target="_blank" className="hover:text-blue-500" rel="noreferrer">
               <FaTwitter />
             </a>
             <a
               href="https://www.instagram.com/velt_app?igsh=MXc5ZWEwajR1bm81dw%3D%3D&utm_source=qr"
               target="_blank"
               className="hover:text-pink-500"
+              rel="noreferrer"
             >
               <FaInstagram />
             </a>
