@@ -71,7 +71,7 @@ export default function Home() {
 
             {/* ✅ New Button: Go to Lister Plan */}
             <Link
-              href={`/ListerPlan?data=${listerPlanQuery}`}
+              href="/ListerPlan"
               className="bg-green-600 px-6 py-3 rounded-lg shadow-lg hover:bg-green-500 transition"
             >
               Lister Plan
