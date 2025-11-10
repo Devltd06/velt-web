@@ -9,9 +9,12 @@ export async function POST(req: Request) {
     if (!reference) return NextResponse.json({ error: "Missing reference" }, { status: 400 });
 
     const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
-    if (!PAYSTACK_SECRET) return NextResponse.json({ error: "Missing Paystack secret" }, { status: 500 });
+    if (!PAYSTACK_SECRET) {
+      console.error("Missing PAYSTACK_SECRET_KEY");
+      return NextResponse.json({ error: "Missing Paystack secret" }, { status: 500 });
+    }
 
-    // Verify with Paystack API
+    // Verify with Paystack
     const verifyRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` },
@@ -22,7 +25,7 @@ export async function POST(req: Request) {
     const userId = metadata?.userId || null;
     const amount = (verifyJson?.data?.amount ?? 0) / 100.0;
 
-    // Insert invoice regardless (pending/paid)
+    // Insert invoice (paid or failed)
     const invoiceRow = {
       user_id: userId,
       listing_id: null,
@@ -36,13 +39,17 @@ export async function POST(req: Request) {
       meta: verifyJson,
       created_at: new Date().toISOString(),
     };
-    await supabaseServer.from("invoices").insert([invoiceRow]);
+    try {
+      await supabaseServer.from("invoices").insert([invoiceRow]);
+    } catch (e) {
+      console.error("Failed to insert invoice:", e);
+    }
 
     if (!success) {
       return NextResponse.json({ paid: false, raw: verifyJson }, { status: 200 });
     }
 
-    // Activate or extend subscription (30 days)
+    // Activate / extend subscription (30 days)
     if (userId) {
       const durationDays = 30;
       const { data: existing } = await supabaseServer
@@ -76,7 +83,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ paid: true, raw: verifyJson }, { status: 200 });
   } catch (err) {
-    console.error("verify error", err);
+    console.error("lister/verify error", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
