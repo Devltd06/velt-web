@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { FaRocket, FaLock, FaWallet, FaTwitter, FaInstagram, FaEnvelope, FaChartLine, FaCloud } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -34,14 +33,14 @@ export default function Home() {
 
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="mt-8 flex flex-wrap gap-4">
                 <Link
-                  href="/auth/signup"
+                  href="/signup"
                   className="inline-flex items-center gap-3 bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold shadow hover:bg-blue-700 transition"
                 >
                   Get started
                 </Link>
 
                 <Link
-                  href={`/login?next=${encodeURIComponent("/lister-plan")}`}
+                  href="/loginlister"
                   className="inline-flex items-center gap-3 border border-blue-600 text-blue-600 px-5 py-3 rounded-lg hover:bg-blue-50 transition"
                 >
                   Lister Login
@@ -144,8 +143,8 @@ export default function Home() {
             </div>
 
             <div className="flex gap-4">
-              <Link href={`/login?next=${encodeURIComponent("/lister-plan")}`} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">Sign in to buy Lister plan</Link>
-              <Link href="/auth/signup" className="border border-slate-200 px-4 py-2 rounded-lg">Create account</Link>
+              <Link href="/loginlister" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">Sign in to buy Lister plan</Link>
+              <Link href="/signup" className="border border-slate-200 px-4 py-2 rounded-lg">Create account</Link>
             </div>
           </div>
         </div>
@@ -171,7 +170,7 @@ export default function Home() {
         </div>
 
         <div className="mt-8 text-center">
-          <Link href="/auth/signup" className="inline-flex items-center gap-3 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold">Create account — it's free</Link>
+          <Link href="/signup" className="inline-flex items-center gap-3 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold">Create account — it's free</Link>
         </div>
       </section>
 
@@ -197,5 +196,6 @@ export default function Home() {
     </div>
   );
 }
+
 
 
