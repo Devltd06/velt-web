@@ -1,6 +1,6 @@
 // src/app/api/lister/init/route.ts
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseServer"; // ✅ your existing helper
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
     }
 
-    // Attempt to read plan price from listing_plans table
+    // canonical price from listing_plans table (fallback to 50)
     let price = 50.0;
     try {
       const { data: planRow } = await supabaseServer
@@ -21,11 +21,11 @@ export async function POST(req: Request) {
         .maybeSingle();
 
       if (planRow && planRow.price) price = Number(planRow.price);
-    } catch (err) {
-      console.warn("Could not fetch plan price:", err);
+    } catch (e) {
+      console.warn("Could not read listing_plans price, using fallback", e);
     }
 
-    // Create a pending invoice
+    // insert pending invoice
     const { data: invoice, error: insertErr } = await supabaseServer
       .from("invoices")
       .insert([
@@ -47,14 +47,14 @@ export async function POST(req: Request) {
       .single();
 
     if (insertErr || !invoice) {
-      console.error("Invoice insert error:", insertErr);
+      console.error("invoice insert err", insertErr);
       return NextResponse.json({ error: "Could not create invoice" }, { status: 500 });
     }
 
-    // Return invoice info to client
     return NextResponse.json({ invoiceId: invoice.id, price });
   } catch (err) {
-    console.error("Lister init error:", err);
+    console.error("lister/init error", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
+
