@@ -2,20 +2,15 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 /**
- * Single-page ListerPlan:
- * - Loads current user & profile from supabase client
- * - Loads Paystack inline script (injects if missing)
- * - Opens Paystack inline for fixed GHS 50
- * - On callback -> POST /api/lister/verify { reference }
- * - Shows verification result on the same page and logs debug info
+ * ListerPlan (single-page, light theme)
+ * - Uses a global window function for Paystack callback to avoid "Attribute callback must be a valid function"
+ * - Fixed price GHS 50, shows user's full_name & email, verifies server-side by POST /api/lister/verify
  */
 
 export default function ListerPlanPage() {
-  const router = useRouter();
   const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -25,6 +20,7 @@ export default function ListerPlanPage() {
   const [paidInfo, setPaidInfo] = useState<any | null>(null);
 
   const PRICE_GHS = 50;
+  const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
 
   const appendLog = (m: any) => {
     const s =
@@ -35,8 +31,6 @@ export default function ListerPlanPage() {
         : JSON.stringify(m, null, 2);
     const line = `[${new Date().toISOString()}] ${s}`;
     setLogs((p) => [...p, line].slice(-80));
-    // also console
-    // eslint-disable-next-line no-console
     console.log("[ListerPlan]", s);
   };
 
@@ -68,7 +62,7 @@ export default function ListerPlanPage() {
     })();
   }, []);
 
-  // load Paystack inline script (same as your debug file)
+  // Load Paystack script
   useEffect(() => {
     if (typeof window === "undefined") return;
     if ((window as any).PaystackPop) {
@@ -96,12 +90,57 @@ export default function ListerPlanPage() {
     };
   }, []);
 
-  const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
-
   const amountInPesewas = useMemo(() => Math.round(PRICE_GHS * 100), [PRICE_GHS]);
   const reference = useMemo(() => `VELT-LISTER-${Date.now()}-${Math.floor(Math.random() * 1e6)}`, []);
 
-  const validateKey = (k: string) => (!k ? "missing" : k.startsWith("pk_") ? "ok" : "not-pk");
+  // Safe wrapper to call verify endpoint
+  async function serverVerify(referenceStr: string) {
+    try {
+      const res = await fetch("/api/lister/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference: referenceStr }),
+      });
+      const json = await res.json().catch(() => null);
+      appendLog("/api/lister/verify status: " + res.status);
+      appendLog({ apiResp: json });
+      return { ok: res.ok, body: json };
+    } catch (e) {
+      appendLog("verify call error: " + String(e));
+      return { ok: false, body: null };
+    }
+  }
+
+  // Attach global handlers so Paystack receives a plain function reference
+  useEffect(() => {
+    // assign plain function to window for callback and onClose
+    (window as any).__veltPayCallback = function (resp: any) {
+      appendLog("Global callback invoked: " + JSON.stringify(resp));
+      setStatus("Payment complete — verifying on server...");
+      serverVerify(resp.reference).then((r) => {
+        if (r.ok && r.body?.paid) {
+          setStatus("Payment verified — subscription active.");
+          setPaidInfo(r.body);
+        } else {
+          setStatus("Verification failed — check server logs.");
+          setPaidInfo(r.body);
+        }
+      });
+    };
+
+    (window as any).__veltPayOnClose = function () {
+      appendLog("Global onClose invoked (user closed checkout).");
+      setStatus("Checkout closed by user.");
+    };
+
+    return () => {
+      try {
+        delete (window as any).__veltPayCallback;
+        delete (window as any).__veltPayOnClose;
+      } catch {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePay = async () => {
     setPaidInfo(null);
@@ -109,7 +148,7 @@ export default function ListerPlanPage() {
     setProcessing(true);
     setStatus("Starting payment...");
 
-    const keyStatus = validateKey(PAYSTACK_PUBLIC_KEY);
+    const keyStatus = !PAYSTACK_PUBLIC_KEY ? "missing" : PAYSTACK_PUBLIC_KEY.startsWith("pk_") ? "ok" : "not-pk";
     appendLog("keyStatus: " + keyStatus);
     if (keyStatus !== "ok") {
       const msg =
@@ -130,11 +169,11 @@ export default function ListerPlanPage() {
       return;
     }
 
-    // Setup Paystack
     appendLog({ reference, amountInPesewas, email: profile?.email || user?.email });
-    let handler;
+
     try {
-      handler = (window as any).PaystackPop.setup({
+      // PASS PLAIN function references (global) — Paystack expects callable attributes
+      const handler = (window as any).PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: profile?.email || user?.email || "",
         amount: amountInPesewas,
@@ -148,47 +187,14 @@ export default function ListerPlanPage() {
             plan: "publisher_monthly",
           },
         },
-        callback: async (resp: any) => {
-          appendLog("Paystack callback success: " + JSON.stringify(resp));
-          setStatus("Payment complete — verifying on server...");
-          try {
-            const res = await fetch("/api/lister/verify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ reference: resp.reference }),
-            });
-            appendLog("/api/lister/verify status: " + res.status);
-            const json = await res.json().catch(() => null);
-            appendLog({ apiResp: json });
-            if (res.ok && json?.paid) {
-              setStatus("Payment verified — subscription active.");
-              setPaidInfo(json);
-            } else {
-              setStatus("Verification failed — check server logs.");
-              setPaidInfo(json);
-            }
-          } catch (e) {
-            appendLog("API verify error: " + String(e));
-            setStatus("Verification error — see console.");
-          }
-        },
-        onClose: () => {
-          appendLog("Paystack onClose called by user (checkout closed).");
-          setStatus("Checkout closed.");
-        },
+        callback: (window as any).__veltPayCallback,
+        onClose: (window as any).__veltPayOnClose,
       });
-    } catch (err) {
-      appendLog("Paystack setup threw: " + String(err));
-      setStatus("Payment setup error (see console).");
-      setProcessing(false);
-      return;
-    }
 
-    try {
       appendLog("Opening Paystack iframe...");
       handler.openIframe();
 
-      // Attempt to force overlay visible if CSS hides it (same tactic as your debug file)
+      // try to force overlay visible if hidden
       setTimeout(() => {
         try {
           const iframes = Array.from(document.querySelectorAll("iframe"));
@@ -203,44 +209,65 @@ export default function ListerPlanPage() {
           appendLog("overlay force error: " + String(e));
         }
       }, 600);
-    } catch (err) {
-      appendLog("openIframe error: " + String(err));
-      setStatus("Could not open checkout (see console).");
+    } catch (err: any) {
+      appendLog("Paystack setup threw: " + String(err));
+      setStatus("Payment setup error (see console).");
     } finally {
       setProcessing(false);
     }
   };
 
+  // Light-theme UI
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gray-900 text-white p-8">
-      <div className="max-w-2xl w-full space-y-6">
-        <div className="bg-gray-800 rounded p-6">
-          <h2 className="text-2xl font-bold mb-2">Confirm Payment</h2>
-          <p className="text-gray-300 mb-4">One-time monthly payment to enable listing (stays, cars, taxis)</p>
+    <div className="min-h-screen bg-white text-slate-900 p-8">
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="p-6 border rounded-lg shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Lister Plan</h2>
+              <p className="text-sm text-slate-600">One-time monthly payment to enable listing (stays, cars, taxis).</p>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-slate-500">Price</div>
+              <div className="text-lg font-semibold text-blue-700">GHS {PRICE_GHS.toFixed(2)}</div>
+            </div>
+          </div>
 
-          <div className="text-gray-300 mb-2">Name: <span className="font-semibold text-white">{profile?.full_name || "—"}</span></div>
-          <div className="text-gray-300 mb-3">Email: <span className="font-semibold text-white">{profile?.email || "—"}</span></div>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs text-slate-500">Name</div>
+              <div className="font-semibold">{profile?.full_name || "—"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-500">Email</div>
+              <div className="font-semibold">{profile?.email || "—"}</div>
+            </div>
+          </div>
 
-          <div className="text-gray-300 mb-6">Price: <span className="text-xl font-semibold">GHS {PRICE_GHS.toFixed(2)}</span></div>
-
-          <button onClick={handlePay} className={`bg-blue-600 px-6 py-3 rounded font-semibold ${processing ? "opacity-70" : "hover:bg-blue-700"}`} disabled={processing}>
-            {processing ? "Processing..." : `Pay GHS ${PRICE_GHS.toFixed(2)}`}
-          </button>
-
-          <p className="text-xs text-gray-400 mt-4">After payment your subscription will be activated automatically. Return to the app and refresh Explore if needed.</p>
+          <div className="mt-6">
+            <button
+              onClick={handlePay}
+              disabled={processing}
+              className={`px-6 py-3 rounded-md text-white ${processing ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
+            >
+              {processing ? "Processing..." : `Pay GHS ${PRICE_GHS.toFixed(2)}`}
+            </button>
+            {status && <div className="mt-3 text-sm text-slate-600">{status}</div>}
+            <p className="mt-4 text-xs text-slate-500">After payment your subscription will be activated automatically. Return to the app and refresh Explore if needed.</p>
+          </div>
         </div>
 
-        <div className="bg-black/40 p-4 rounded">
-          <h3 className="font-semibold mb-2">Debug logs (latest)</h3>
-          <div style={{ maxHeight: 280, overflow: "auto", fontSize: 12, whiteSpace: "pre-wrap" }}>
-            {logs.length === 0 ? <div className="text-gray-400">No logs yet — click Pay to start.</div> : logs.map((l, i) => <div key={i} className="mb-1">{l}</div>)}
+        <div className="p-4 border rounded-lg bg-gray-50">
+          <h3 className="font-semibold mb-2 text-slate-800">Debug logs (latest)</h3>
+          <div style={{ maxHeight: 260, overflow: "auto", fontFamily: "monospace", fontSize: 13 }} className="text-slate-700">
+            {logs.length === 0 ? <div className="text-slate-400">No logs yet — click Pay to start.</div> : logs.map((l, i) => <div key={i} className="mb-1">{l}</div>)}
           </div>
         </div>
 
         {paidInfo && (
-          <div className={`p-3 rounded ${paidInfo.paid ? "bg-green-50 border border-green-100 text-green-800" : "bg-red-50 border border-red-100 text-red-800"}`}>
+          <div className="p-4 border rounded-lg">
             <div className="font-semibold mb-2">{paidInfo.paid ? "Payment successful" : "Payment not verified"}</div>
-            <pre style={{ fontSize: 12, whiteSpace: "pre-wrap" }}>{JSON.stringify(paidInfo.raw ?? paidInfo, null, 2)}</pre>
+            <pre style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{JSON.stringify(paidInfo.raw ?? paidInfo, null, 2)}</pre>
           </div>
         )}
       </div>
