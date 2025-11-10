@@ -1,4 +1,4 @@
-// src/app/loginlister/page.tsx
+// src/components/LoginListerForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function LoginListerPage() {
+export default function LoginListerForm() {
   const router = useRouter();
   const params = useSearchParams();
   const paymentSuccess = params?.get("paymentSuccess") === "true";
@@ -19,12 +19,10 @@ export default function LoginListerPage() {
   async function handleSignIn(e?: React.FormEvent) {
     e?.preventDefault();
     setMessage(null);
-
     if (!email || !password) {
       setMessage({ type: "error", text: "Email and password are required." });
       return;
     }
-
     setBusy(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -33,8 +31,6 @@ export default function LoginListerPage() {
         setBusy(false);
         return;
       }
-
-      // successful sign in — go to lister-plan
       router.push("/ListerPlan");
     } catch (err: any) {
       setMessage({ type: "error", text: err?.message || String(err) });
@@ -53,11 +49,8 @@ export default function LoginListerPage() {
     try {
       const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined;
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-      if (error) {
-        setMessage({ type: "error", text: error.message });
-      } else {
-        setMessage({ type: "info", text: "Check your inbox for a reset link." });
-      }
+      if (error) setMessage({ type: "error", text: error.message });
+      else setMessage({ type: "info", text: "Check your inbox for a reset link." });
     } catch (err: any) {
       setMessage({ type: "error", text: err?.message || "Unable to send reset link." });
     } finally {
@@ -127,4 +120,3 @@ export default function LoginListerPage() {
     </div>
   );
 }
-
