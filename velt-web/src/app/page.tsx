@@ -41,7 +41,7 @@ export default function Home() {
                 </Link>
 
                 <Link
-                  href={`/login?next=${encodeURIComponent("/lister-plan")}`}
+                  href="/loginlister"
                   className="inline-flex items-center gap-3 border border-blue-600 text-blue-600 px-5 py-3 rounded-lg hover:bg-blue-50 transition"
                 >
                   Lister Login
@@ -144,8 +144,8 @@ export default function Home() {
             </div>
 
             <div className="flex gap-4">
-              <Link href={`/login?next=${encodeURIComponent("/lister-plan")}`} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">Sign in to buy Lister plan</Link>
-              <Link href="/auth/signup" className="border border-slate-200 px-4 py-2 rounded-lg">Create account</Link>
+              <Link href="/loginlister" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">Sign in to buy Lister plan</Link>
+              <Link href="/signup" className="border border-slate-200 px-4 py-2 rounded-lg">Create account</Link>
             </div>
           </div>
         </div>
