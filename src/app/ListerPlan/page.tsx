@@ -1,279 +1,290 @@
 // src/app/ListerPlan/page.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { JSX, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-/**
- * ListerPlan (single-page, light theme)
- * - Uses a global window function for Paystack callback to avoid "Attribute callback must be a valid function"
- * - Fixed price GHS 50, shows user's full_name & email, verifies server-side by POST /api/lister/verify
- */
+declare global {
+  interface Window {
+    PaystackPop?: any;
+    __velt_paystack_callback_named?: (resp: any) => void;
+    __velt_paystack_onclose_named?: () => void;
+    // alias
+    callback?: (resp: any) => void;
+    onClose?: () => void;
+  }
+}
 
-export default function ListerPlanPage() {
-  const [user, setUser] = useState<any | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+const PRICE_GHS = 50;
+
+export default function ListerPlanPage(): JSX.Element {
+  const router = useRouter();
+  const [profile, setProfile] = useState<{ full_name?: string | null; email?: string | null } | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
-  const [logs, setLogs] = useState<string[]>([]);
   const [processing, setProcessing] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
-  const [paidInfo, setPaidInfo] = useState<any | null>(null);
 
-  const PRICE_GHS = 50;
-  const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
+  const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ?? "";
 
-  const appendLog = (m: any) => {
-    const s =
-      typeof m === "string"
-        ? m
-        : m instanceof Error
-        ? `${m.message}\n${m.stack}`
-        : JSON.stringify(m, null, 2);
-    const line = `[${new Date().toISOString()}] ${s}`;
-    setLogs((p) => [...p, line].slice(-80));
-    console.log("[ListerPlan]", s);
-  };
-
+  // load user profile
   useEffect(() => {
     (async () => {
-      appendLog("loading user from supabase client");
       try {
         const { data } = await supabase.auth.getUser();
-        const cur = data?.user ?? null;
-        if (!cur) {
-          appendLog("no signed-in user");
-          setStatus("Not signed in — sign in on the website first.");
-          return;
-        }
-        setUser(cur);
-        appendLog(`user loaded: ${cur.id}`);
-
+        const user = data?.user ?? null;
+        if (!user) return;
         const { data: prof } = await supabase
           .from("profiles")
           .select("full_name,email")
-          .eq("id", cur.id)
+          .eq("id", user.id)
           .maybeSingle();
-        setProfile(prof || { full_name: "", email: cur?.email || "" });
-        appendLog("profile loaded");
-      } catch (err) {
-        appendLog("error loading user/profile: " + String(err));
-        setStatus("Error loading profile — check console.");
+        setProfile(prof ?? { full_name: user.user_metadata?.full_name ?? "", email: user.email ?? "" });
+      } catch (e) {
+        console.error("Failed to load profile:", e);
       }
     })();
   }, []);
 
-  // Load Paystack script
+  // load Paystack script
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if ((window as any).PaystackPop) {
-      appendLog("PaystackPop already available");
+    if (window.PaystackPop) {
       setScriptLoaded(true);
       return;
     }
     const s = document.createElement("script");
     s.src = "https://js.paystack.co/v1/inline.js";
     s.async = true;
-    s.onload = () => {
-      appendLog("Paystack script loaded (onload). window.PaystackPop? " + !!(window as any).PaystackPop);
-      setScriptLoaded(true);
-    };
-    s.onerror = (e) => {
-      appendLog("Paystack script failed to load: " + String(e));
-      setScriptLoaded(false);
-    };
+    s.onload = () => setScriptLoaded(true);
+    s.onerror = () => setScriptLoaded(false);
     document.body.appendChild(s);
-    appendLog("Inserted Paystack script tag.");
     return () => {
       try {
-        if (s.parentNode) s.parentNode.removeChild(s);
+        s.parentNode?.removeChild(s);
       } catch {}
     };
   }, []);
 
-  const amountInPesewas = useMemo(() => Math.round(PRICE_GHS * 100), [PRICE_GHS]);
-  const reference = useMemo(() => `VELT-LISTER-${Date.now()}-${Math.floor(Math.random() * 1e6)}`, []);
+  const amountInPesewas = useMemo(() => Math.round(PRICE_GHS * 100), []);
+  const reference = useMemo(() => "VELT-LISTER-" + Date.now().toString() + "-" + Math.floor(Math.random() * 1e6).toString(), []);
 
-  // Safe wrapper to call verify endpoint
-  async function serverVerify(referenceStr: string) {
+  // keep the heavy DOM tweaks in a helper
+  const adjustIframePresentation = () => {
+    setTimeout(() => {
+      try {
+        const iframes = Array.from(document.getElementsByTagName("iframe"));
+        const payIframe = iframes.find((f) => {
+          try {
+            return !!(f && f.src && f.src.includes("paystack"));
+          } catch {
+            return false;
+          }
+        }) as HTMLIFrameElement | undefined;
+
+        if (payIframe) {
+          payIframe.style.zIndex = "2147483647";
+          payIframe.style.position = "fixed";
+          payIframe.style.left = "0";
+          payIframe.style.top = "0";
+        }
+
+        const divs = Array.from(document.getElementsByTagName("div"));
+        for (const d of divs) {
+          try {
+            const rect = d.getBoundingClientRect();
+            if (rect.width >= window.innerWidth - 2 && rect.height >= window.innerHeight - 2) {
+              if (!(payIframe && d.contains(payIframe))) {
+                (d as HTMLElement).style.pointerEvents = "none";
+                (d as HTMLElement).style.background = "transparent";
+              }
+            }
+          } catch {}
+        }
+      } catch (err) {
+        console.warn("adjustIframePresentation error", err);
+      }
+    }, 120);
+  };
+
+  // inner async handler (not the global) — performs server notify
+  const handlePayCallbackInner = async (resp: any) => {
     try {
-      const res = await fetch("/api/lister/verify", {
+      const { data } = await supabase.auth.getUser();
+      const userId = data?.user?.id ?? null;
+
+      const payload = {
+        reference: resp?.reference,
+        userId,
+        email: profile?.email ?? "",
+        full_name: profile?.full_name ?? "",
+        amount: PRICE_GHS,
+      };
+
+      const r = await fetch("/api/lister/markPaid", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reference: referenceStr }),
+        body: JSON.stringify(payload),
       });
-      const json = await res.json().catch(() => null);
-      appendLog("/api/lister/verify status: " + res.status);
-      appendLog({ apiResp: json });
-      return { ok: res.ok, body: json };
-    } catch (e) {
-      appendLog("verify call error: " + String(e));
-      return { ok: false, body: null };
+
+      if (r.ok) {
+        alert("Payment recorded. You can now publish listings 🎉");
+        router.push("/");
+      } else {
+        const txt = await r.text().catch(() => "");
+        console.warn("markPaid non-ok", r.status, txt);
+        alert("Payment recorded but server returned an error. Check logs.");
+        router.push("/");
+      }
+    } catch (err) {
+      console.error("notify server error", err);
+      alert("Payment succeeded but notifying server failed. Check logs.");
+      router.push("/");
     }
-  }
+  };
 
-  // Attach global handlers so Paystack receives a plain function reference
-  useEffect(() => {
-    // assign plain function to window for callback and onClose
-    (window as any).__veltPayCallback = function (resp: any) {
-      appendLog("Global callback invoked: " + JSON.stringify(resp));
-      setStatus("Payment complete — verifying on server...");
-      serverVerify(resp.reference).then((r) => {
-        if (r.ok && r.body?.paid) {
-          setStatus("Payment verified — subscription active.");
-          setPaidInfo(r.body);
-        } else {
-          setStatus("Verification failed — check server logs.");
-          setPaidInfo(r.body);
-        }
-      });
-    };
+  // create named global functions BEFORE calling Paystack.setup
+  const ensureGlobalCallbacks = () => {
+    // If global named function doesn't exist, create it as a synchronous named function
+    if (typeof window.__velt_paystack_callback_named !== "function") {
+      // named non-async function wrapper that calls the async inner handler
+      // important: function is function declaration assigned to window (not arrow, not async)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__velt_paystack_callback_named = function (resp: any) {
+        // call async inner but don't make this function async
+        void handlePayCallbackInner(resp);
+      };
+      // alias for older expectations (some Paystack variants)
+      window.callback = (window as any).__velt_paystack_callback_named;
+    }
 
-    (window as any).__veltPayOnClose = function () {
-      appendLog("Global onClose invoked (user closed checkout).");
-      setStatus("Checkout closed by user.");
-    };
-
-    return () => {
-      try {
-        delete (window as any).__veltPayCallback;
-        delete (window as any).__veltPayOnClose;
-      } catch {}
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (typeof window.__velt_paystack_onclose_named !== "function") {
+      (window as any).__velt_paystack_onclose_named = function () {
+        console.log("Paystack checkout closed (global onclose)");
+      };
+      window.onClose = (window as any).__velt_paystack_onclose_named;
+    }
+  };
 
   const handlePay = async () => {
-    setPaidInfo(null);
-    appendLog("handlePay clicked");
+    if (!PAYSTACK_PUBLIC_KEY || !PAYSTACK_PUBLIC_KEY.startsWith("pk_")) {
+      alert("Missing/invalid NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY. Use your Paystack publishable key (pk_...)");
+      return;
+    }
+    if (typeof window === "undefined" || !window.PaystackPop) {
+      alert("Payment system still loading. Try again in a moment.");
+      return;
+    }
+
     setProcessing(true);
-    setStatus("Starting payment...");
-
-    const keyStatus = !PAYSTACK_PUBLIC_KEY ? "missing" : PAYSTACK_PUBLIC_KEY.startsWith("pk_") ? "ok" : "not-pk";
-    appendLog("keyStatus: " + keyStatus);
-    if (keyStatus !== "ok") {
-      const msg =
-        keyStatus === "missing"
-          ? "Paystack public key missing — set NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY (pk_...) and rebuild."
-          : "Invalid key: looks like a secret key. Use publishable key (pk_...).";
-      setStatus(msg);
-      appendLog(msg);
-      alert(msg);
-      setProcessing(false);
-      return;
-    }
-
-    if (!scriptLoaded || !(window as any).PaystackPop) {
-      setStatus("Payment system loading or blocked. Check console/Network/CSP/adblock.");
-      appendLog("PaystackPop missing even after script load.");
-      setProcessing(false);
-      return;
-    }
-
-    appendLog({ reference, amountInPesewas, email: profile?.email || user?.email });
 
     try {
-      // PASS PLAIN function references (global) — Paystack expects callable attributes
-      const handler = (window as any).PaystackPop.setup({
+      // ensure global named callbacks exist BEFORE setup
+      ensureGlobalCallbacks();
+
+      // confirm the global callback is a plain function
+      if (typeof window.__velt_paystack_callback_named !== "function") {
+        throw new Error("Global callback is not a function");
+      }
+
+      // Setup using the global named functions (not inline)
+      const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
-        email: profile?.email || user?.email || "",
+        email: profile?.email ?? "",
         amount: amountInPesewas,
         currency: "GHS",
         ref: reference,
-        metadata: {
-          velt: {
-            userId: user?.id ?? null,
-            fullName: profile?.full_name ?? "",
-            email: profile?.email ?? user?.email ?? "",
-            plan: "publisher_monthly",
-          },
-        },
-        callback: (window as any).__veltPayCallback,
-        onClose: (window as any).__veltPayOnClose,
+        metadata: { velt: { plan: "publisher_monthly" } },
+        callback: window.__velt_paystack_callback_named,
+        onClose: window.__velt_paystack_onclose_named,
       });
 
-      appendLog("Opening Paystack iframe...");
+      // open and adjust presentation
       handler.openIframe();
+      adjustIframePresentation();
 
-      // try to force overlay visible if hidden
+      // clean up after a bit (leave callback long enough for Paystack to call it)
       setTimeout(() => {
         try {
-          const iframes = Array.from(document.querySelectorAll("iframe"));
-          const payIframe = iframes.find((f) => ((f as HTMLIFrameElement).src || "").includes("paystack"));
-          if (payIframe) {
-            (payIframe as HTMLElement).style.zIndex = "999999999";
-            (payIframe as HTMLElement).style.opacity = "1";
-            (payIframe as HTMLElement).style.display = "block";
-            appendLog("Forced z-index/visibility on Paystack iframe.");
-          }
-        } catch (e) {
-          appendLog("overlay force error: " + String(e));
-        }
-      }, 600);
-    } catch (err: any) {
-      appendLog("Paystack setup threw: " + String(err));
-      setStatus("Payment setup error (see console).");
+          // keep callback for a short while longer, then remove
+          setTimeout(() => {
+            try {
+              if ((window as any).__velt_paystack_callback_named) {
+                try {
+                  delete (window as any).__velt_paystack_callback_named;
+                } catch {}
+              }
+              if ((window as any).__velt_paystack_onclose_named) {
+                try {
+                  delete (window as any).__velt_paystack_onclose_named;
+                } catch {}
+              }
+              // remove aliases
+              try {
+                delete (window as any).callback;
+                delete (window as any).onClose;
+              } catch {}
+            } catch {}
+          }, 3000);
+        } catch {}
+      }, 500);
+    } catch (err) {
+      console.error("Paystack setup/open error:", err);
+      alert("Could not open Paystack checkout. See console for details.");
     } finally {
       setProcessing(false);
     }
   };
 
-  // Light-theme UI
   return (
-    <div className="min-h-screen bg-white text-slate-900 p-8">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="p-6 border rounded-lg shadow-sm">
-          <div className="flex items-center justify-between">
+    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#05233c", padding: 28, fontFamily: "system-ui, Arial, sans-serif" }}>
+      <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1 style={{ margin: 0, fontSize: 28 }}>Lister Plan</h1>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 12, color: "#6b7280" }}>Monthly</div>
+            <div style={{ fontWeight: 800, color: "#0b61d6" }}>GHS {PRICE_GHS.toFixed(2)}</div>
+          </div>
+        </header>
+
+        <section style={{ marginTop: 18, border: "1px solid #e6eef3", padding: 16, borderRadius: 10, background: "#f8fbff" }}>
+          <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Name</div>
+              <div style={{ fontWeight: 700 }}>{profile?.full_name ?? "—"}</div>
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Email</div>
+              <div style={{ fontWeight: 700 }}>{profile?.email ?? "—"}</div>
+            </div>
+
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Lister Plan</h2>
-              <p className="text-sm text-slate-600">One-time monthly payment to enable listing (stays, cars, taxis).</p>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-slate-500">Price</div>
-              <div className="text-lg font-semibold text-blue-700">GHS {PRICE_GHS.toFixed(2)}</div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div className="text-xs text-slate-500">Name</div>
-              <div className="font-semibold">{profile?.full_name || "—"}</div>
-            </div>
-            <div>
-              <div className="text-xs text-slate-500">Email</div>
-              <div className="font-semibold">{profile?.email || "—"}</div>
+              <button
+                onClick={handlePay}
+                disabled={processing}
+                style={{
+                  background: processing ? "#93c5fd" : "#0b61d6",
+                  color: "#fff",
+                  padding: "12px 18px",
+                  borderRadius: 10,
+                  border: "none",
+                  cursor: processing ? "not-allowed" : "pointer",
+                  fontWeight: 800,
+                }}
+              >
+                {processing ? "Processing..." : "Pay GHS " + PRICE_GHS.toFixed(2)}
+              </button>
             </div>
           </div>
-
-          <div className="mt-6">
-            <button
-              onClick={handlePay}
-              disabled={processing}
-              className={`px-6 py-3 rounded-md text-white ${processing ? "bg-blue-300" : "bg-blue-600 hover:bg-blue-700"}`}
-            >
-              {processing ? "Processing..." : `Pay GHS ${PRICE_GHS.toFixed(2)}`}
-            </button>
-            {status && <div className="mt-3 text-sm text-slate-600">{status}</div>}
-            <p className="mt-4 text-xs text-slate-500">After payment your subscription will be activated automatically. Return to the app and refresh Explore if needed.</p>
-          </div>
-        </div>
-
-        <div className="p-4 border rounded-lg bg-gray-50">
-          <h3 className="font-semibold mb-2 text-slate-800">Debug logs (latest)</h3>
-          <div style={{ maxHeight: 260, overflow: "auto", fontFamily: "monospace", fontSize: 13 }} className="text-slate-700">
-            {logs.length === 0 ? <div className="text-slate-400">No logs yet — click Pay to start.</div> : logs.map((l, i) => <div key={i} className="mb-1">{l}</div>)}
-          </div>
-        </div>
-
-        {paidInfo && (
-          <div className="p-4 border rounded-lg">
-            <div className="font-semibold mb-2">{paidInfo.paid ? "Payment successful" : "Payment not verified"}</div>
-            <pre style={{ whiteSpace: "pre-wrap", fontSize: 12 }}>{JSON.stringify(paidInfo.raw ?? paidInfo, null, 2)}</pre>
-          </div>
-        )}
+          <div style={{ marginTop: 12, fontSize: 13, color: "#475569" }}>Single subscription — after paying you can publish stays, cars or taxis.</div>
+        </section>
       </div>
     </div>
   );
 }
+
+
+
 
 
 
