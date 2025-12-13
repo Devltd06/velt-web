@@ -50,11 +50,11 @@ export default function Signup() {
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!email || !password || !username) {
-      alert("Email, Password and Username are required.");
+      alert("Email, Password, and Username are required.");
       return;
     }
     if (!agreed) {
-      alert("You must agree to the Terms & Privacy Policy.");
+      alert("You must agree to the Terms and Privacy Policy.");
       return;
     }
 
@@ -65,7 +65,7 @@ export default function Signup() {
     const ok = await checkUsernameAvailable(trimmedUsername);
     if (!ok) {
       setLoading(false);
-      alert("Username taken — choose another one.");
+      alert("Username taken. Choose another one.");
       return;
     }
 
@@ -110,30 +110,92 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundImage: "url('/signup-bg.jpg')", backgroundSize: "cover" }}>
-      <div className="bg-black/60 p-8 rounded-2xl w-full max-w-md text-white shadow-lg">
-        <img src="/favicon.ico" alt="VELT" className="mx-auto w-20 mb-4" />
-        <h2 className="text-2xl font-bold text-center mb-2">Create an account</h2>
-        <p className="text-center text-gray-300 mb-4">Sign up to continue</p>
+    <div className="min-h-screen flex items-center justify-center bg-white py-16 px-6">
+      <div className="bg-white border border-gray-300 p-8 rounded-2xl w-full max-w-md text-black shadow-lg">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold">Create an Account</h2>
+          <p className="mt-2 text-gray-700">Sign up to continue</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input name="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="w-full p-3 rounded bg-black/30 placeholder-gray-400" />
-          <input name="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full Name (optional)" className="w-full p-3 rounded bg-black/30 placeholder-gray-400" />
-          <input name="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Bio (optional)" className="w-full p-3 rounded bg-black/30 placeholder-gray-400" />
-          <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full p-3 rounded bg-black/30 placeholder-gray-400" />
-          <input name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full p-3 rounded bg-black/30 placeholder-gray-400" />
+          <div>
+            <label className="block text-sm font-medium text-black mb-1">Username</label>
+            <input
+              name="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Choose a username"
+              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+            />
+          </div>
 
-          <label className="flex items-center gap-3">
+          <div>
+            <label className="block text-sm font-medium text-black mb-1">Full Name</label>
+            <input
+              name="fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Your name (optional)"
+              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black mb-1">Bio</label>
+            <input
+              name="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself (optional)"
+              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black mb-1">Email</label>
+            <input
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black mb-1">Password</label>
+            <input
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Create a strong password"
+              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+            />
+          </div>
+
+          <label className="flex items-center gap-3 text-sm text-gray-700">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-            <span className="text-sm text-gray-300">I agree to the <a href="/legal/terms" className="underline text-blue-400">Terms</a> and <a href="/legal/privacy" className="underline text-blue-400">Privacy Policy</a></span>
+            <span>I agree to the <a href="/privacy" className="underline" style={{ color: "#d4af37" }}>Privacy Policy</a></span>
           </label>
 
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 py-3 rounded font-semibold hover:bg-blue-700 transition">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded font-semibold text-black transition hover:opacity-90"
+            style={{ backgroundColor: "#d4af37" }}
+          >
             {loading ? "Creating account..." : "Next: Subscription"}
           </button>
         </form>
 
-        <p className="text-center text-gray-300 mt-4">Already have an account? <a href="/" className="text-blue-400 underline">Log in via the app</a></p>
+        <p className="text-center text-gray-700 mt-4">
+          Already have an account?
+          <a href="/loginlister" className="underline ml-1" style={{ color: "#d4af37" }}>
+            Sign in
+          </a>
+        </p>
       </div>
     </div>
   );

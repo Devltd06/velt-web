@@ -1,96 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { FaRocket, FaLock, FaWallet, FaTwitter, FaInstagram, FaEnvelope, FaChartLine, FaCloud } from "react-icons/fa";
+import { FaImage, FaWallet, FaGlobe, FaChartLine } from "react-icons/fa";
 import { motion } from "framer-motion";
+import WaitlistForm from "@/components/WaitlistForm";
 
 export default function Home() {
   return (
-    <div className="min-h-screen w-full bg-white text-slate-900 antialiased">
-      {/* HERO - full bleed, light theme */}
-      <header className="w-full">
+    <div className="min-h-screen w-full bg-white text-black antialiased">
+      {/* HERO */}
+      <header className="w-full border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-24 md:py-32">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <motion.h1
-                initial={{ y: 16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="text-4xl md:text-6xl font-extrabold leading-tight"
-              >
-                Turn spaces into revenue with <span className="text-blue-600">Velt</span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ y: 8, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.08, duration: 0.6 }}
-                className="mt-6 text-lg text-slate-700 max-w-xl"
-              >
-                Manage cloud-connected billboards, list stays, cars and taxis, and collect recurring revenue — all from one dashboard.
-                Fast deployment. Secure payments. Real-time analytics.
-              </motion.p>
-
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }} className="mt-8 flex flex-wrap gap-4">
-                <Link
-                  href="/signup"
-                  className="inline-flex items-center gap-3 bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold shadow hover:bg-blue-700 transition"
-                >
-                  Get started
-                </Link>
-
-                <Link
-                  href="/loginlister"
-                  className="inline-flex items-center gap-3 border border-blue-600 text-blue-600 px-5 py-3 rounded-lg hover:bg-blue-50 transition"
-                >
-                  Lister Login
-                </Link>
-
-                <a href="#features" className="inline-flex items-center gap-2 text-sm text-slate-600 px-3 py-3 rounded-lg">
-                  Learn features →
-                </a>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+              <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
+                Your Content. On Billboards. Everywhere.
+              </h1>
+              <p className="text-lg text-gray-600 mb-8">
+                Upload your content and get it displayed on billboards across the country.
+              </p>
+              
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+                <WaitlistForm showName={false} text="Sign Up on Waitlist" />
               </motion.div>
 
-              <motion.div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs text-slate-600" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.28 }}>
-                <div className="flex items-center gap-3"><FaChartLine className="text-blue-500" /> Real-time metrics</div>
-                <div className="flex items-center gap-3"><FaWallet className="text-blue-500" /> Paystack payments</div>
-                <div className="flex items-center gap-3"><FaRocket className="text-blue-500" /> Fast setup</div>
-                <div className="flex items-center gap-3"><FaLock className="text-blue-500" /> Secure by design</div>
-              </motion.div>
-            </div>
+              <div className="mt-10 flex gap-6">
+                <Link href="/investors" className="text-sm font-semibold text-gray-700 hover:text-black transition">
+                  Investors
+                </Link>
+                <Link href="/support" className="text-sm font-semibold text-gray-700 hover:text-black transition">
+                  Support
+                </Link>
+              </div>
+            </motion.div>
 
-            {/* Visual / mock */}
-            <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.12, duration: 0.6 }}>
-              <div className="w-full max-w-xl mx-auto border rounded-2xl shadow-md p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-xs text-slate-500">LIVE • Connected</div>
-                    <div className="text-lg font-semibold">Main Street Billboard</div>
-                  </div>
-                  <div className="text-sm text-slate-700">Impressions <span className="font-bold">12.4k</span></div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-                    <div className="text-xs text-blue-600">Active Creative</div>
-                    <div className="mt-1 font-semibold">Weekend Sale</div>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-white border border-slate-100 shadow-sm">
-                    <div className="text-xs text-slate-500">Next Slot</div>
-                    <div className="mt-1 font-semibold">Mon 08:00</div>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-white border border-slate-100">
-                    <div className="text-xs text-slate-500">Status</div>
-                    <div className="mt-1 text-sm font-semibold text-green-600">All synced</div>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-white border border-slate-100">
-                    <div className="text-xs text-slate-500">Top Listing</div>
-                    <div className="mt-1 font-semibold">Cozy 2BR in Accra</div>
-                    <div className="text-xs text-slate-500">GHS 120 / night</div>
-                  </div>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2, duration: 0.8 }}>
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 border-2" style={{ borderColor: "#d4af37" }}>
+                <div className="space-y-4">
+                  <motion.div className="p-4 bg-white rounded-lg shadow-sm border-l-4" style={{ borderColor: "#d4af37" }} whileHover={{ translateY: -4 }}>
+                    <div className="text-sm font-semibold">Billboard Display Ready</div>
+                    <div className="text-xs text-gray-600 mt-1">Upload once, display everywhere</div>
+                  </motion.div>
+                  <motion.div className="p-4 bg-white rounded-lg shadow-sm border-l-4" style={{ borderColor: "#d4af37" }} whileHover={{ translateY: -4 }}>
+                    <div className="text-sm font-semibold">Easy Management</div>
+                    <div className="text-xs text-gray-600 mt-1">Control your content from one dashboard</div>
+                  </motion.div>
+                  <motion.div className="p-4 bg-white rounded-lg shadow-sm border-l-4" style={{ borderColor: "#d4af37" }} whileHover={{ translateY: -4 }}>
+                    <div className="text-sm font-semibold">Nationwide Reach</div>
+                    <div className="text-xs text-gray-600 mt-1">Billboards across the country</div>
+                  </motion.div>
                 </div>
               </div>
             </motion.div>
@@ -98,104 +56,166 @@ export default function Home() {
         </div>
       </header>
 
+
       {/* FEATURES */}
-      <section id="features" className="w-full bg-slate-50">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 text-center">Features that power local revenue</h2>
-          <p className="text-center text-slate-600 max-w-2xl mx-auto mt-3">Everything you need to run listings and ads — modern dashboard, secure checkout, and analytics that matter.</p>
+      <section className="w-full bg-gray-50 border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 py-20">
+          <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-bold text-black text-center mb-4">
+            How It Works
+          </motion.h2>
+          <p className="text-center text-gray-600 max-w-2xl mx-auto mb-12">Upload your content to billboards across the country in minutes.</p>
 
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <motion.div whileHover={{ y: -6 }} className="p-6 bg-white border rounded-lg shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded bg-blue-50 text-blue-600"><FaCloud /></div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">Cloud control</h3>
-                  <p className="text-sm text-slate-600 mt-2">Push content to many billboards instantly, schedule creatives and target by location.</p>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0 }} className="p-8 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
+              <div className="text-4xl mb-4" style={{ color: "#d4af37" }}>1</div>
+              <h3 className="text-xl font-bold text-black mb-3">Upload Content</h3>
+              <p className="text-gray-600 text-sm">Add your content and select billboard locations.</p>
             </motion.div>
 
-            <motion.div whileHover={{ y: -6 }} className="p-6 bg-white border rounded-lg shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded bg-blue-50 text-blue-600"><FaWallet /></div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">Secure payments</h3>
-                  <p className="text-sm text-slate-600 mt-2">Paystack-powered subscriptions and one-off payments in GHS, verified server-side.</p>
-                </div>
-              </div>
+            <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="p-8 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
+              <div className="text-4xl mb-4" style={{ color: "#d4af37" }}>2</div>
+              <h3 className="text-xl font-bold text-black mb-3">Display & Manage</h3>
+              <p className="text-gray-600 text-sm">View live status and analytics from your dashboard.</p>
             </motion.div>
 
-            <motion.div whileHover={{ y: -6 }} className="p-6 bg-white border rounded-lg shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded bg-blue-50 text-blue-600"><FaChartLine /></div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">Real-time analytics</h3>
-                  <p className="text-sm text-slate-600 mt-2">See impressions, booking conversions, and billing metrics in one dashboard.</p>
-                </div>
-              </div>
+            <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="p-8 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
+              <div className="text-4xl mb-4" style={{ color: "#d4af37" }}>3</div>
+              <h3 className="text-xl font-bold text-black mb-3">Reach Audiences</h3>
+              <p className="text-gray-600 text-sm">Get your message in front of people everywhere.</p>
             </motion.div>
-          </div>
-
-          <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6 bg-white border p-6 rounded-lg shadow-sm">
-            <div>
-              <h4 className="font-bold text-slate-900">Ready to monetize your space?</h4>
-              <p className="text-slate-600 mt-2">Become a Lister to create listings and run ad campaigns. Manage everything on the Velt website.</p>
-            </div>
-
-            <div className="flex gap-4">
-              <Link href="/loginlister" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">Sign in to buy Lister plan</Link>
-              <Link href="/signup" className="border border-slate-200 px-4 py-2 rounded-lg">Create account</Link>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* SOCIAL PROOF & CTA */}
-      <section className="max-w-6xl mx-auto px-6 md:px-12 py-14">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 bg-white border rounded-lg text-slate-700">
-            <div className="font-semibold">Trusted by local businesses</div>
-            <div className="mt-3 text-sm">Automated scheduling and simple billing helped local shops sell more effectively.</div>
-          </div>
+      {/* FEATURES HIGHLIGHT */}
+      <section className="w-full bg-white">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 py-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+              <h2 className="text-3xl font-bold text-black mb-6">Powerful Features</h2>
+              <div className="space-y-4">
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#faf5f0", color: "#d4af37" }}>
+                    <FaImage />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-black">Billboard Management</h4>
+                    <p className="text-sm text-gray-600">Manage all your billboards from one dashboard.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#faf5f0", color: "#d4af37" }}>
+                    <FaChartLine />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-black">Real-time Analytics</h4>
+                    <p className="text-sm text-gray-600">Track impressions and engagement instantly.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#faf5f0", color: "#d4af37" }}>
+                    <FaGlobe />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-black">Nationwide Coverage</h4>
+                    <p className="text-sm text-gray-600">Access billboards across all regions.</p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#faf5f0", color: "#d4af37" }}>
+                    <FaWallet />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-black">Simple Payments</h4>
+                    <p className="text-sm text-gray-600">Secure and easy payment processing.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
 
-          <div className="p-6 bg-white border rounded-lg text-slate-700">
-            <div className="font-semibold">Listings + bookings</div>
-            <div className="mt-3 text-sm">Create stays, cars or taxis and accept bookings with secure checkout.</div>
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-12 border-2" style={{ borderColor: "#d4af37" }}>
+                <div className="space-y-6">
+                  <motion.div className="p-6 bg-white rounded-lg shadow-sm border-l-4" style={{ borderColor: "#d4af37" }} whileHover={{ scale: 1.05 }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-black">Active Billboards</div>
+                        <div className="text-xs text-gray-600">Across the country</div>
+                      </div>
+                      <div className="text-3xl font-bold" style={{ color: "#d4af37" }}>24</div>
+                    </div>
+                  </motion.div>
+                  <motion.div className="p-6 bg-white rounded-lg shadow-sm border-l-4" style={{ borderColor: "#d4af37" }} whileHover={{ scale: 1.05 }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-black">Total Impressions</div>
+                        <div className="text-xs text-gray-600">This month</div>
+                      </div>
+                      <div className="text-3xl font-bold" style={{ color: "#d4af37" }}>2.4M</div>
+                    </div>
+                  </motion.div>
+                  <motion.div className="p-6 bg-white rounded-lg shadow-sm border-l-4" style={{ borderColor: "#d4af37" }} whileHover={{ scale: 1.05 }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-black">Uptime</div>
+                        <div className="text-xs text-gray-600">Reliability guaranteed</div>
+                      </div>
+                      <div className="text-3xl font-bold" style={{ color: "#d4af37" }}>99%</div>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.div>
           </div>
-
-          <div className="p-6 bg-white border rounded-lg text-slate-700">
-            <div className="font-semibold">Grow with analytics</div>
-            <div className="mt-3 text-sm">Measure performance and optimize creatives for better ROI.</div>
-          </div>
-        </div>
-
-        <div className="mt-8 text-center">
-          <Link href="/signup" className="inline-flex items-center gap-3 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold">Create account — it's free</Link>
         </div>
       </section>
 
-      {/* FOOTER (simple, light) */}
-      <footer className="w-full border-t border-slate-100 bg-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-8 text-sm text-slate-600">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div>
-              <div className="font-bold text-slate-900">VELT</div>
-              <div className="text-xs">billboards • listings • creators</div>
+      {/* CTA SECTION */}
+      <section className="w-full bg-gradient-to-r from-gray-900 to-black text-white">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 py-20">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
+            <p className="text-gray-300 mb-10 max-w-2xl mx-auto">Join the waitlist to get early access to VELT.</p>
+            
+            <div className="max-w-md mx-auto">
+              <WaitlistForm showName={true} text="Sign Up on Waitlist" />
             </div>
+          </motion.div>
+        </div>
+      </section>
 
-            <div className="flex gap-6">
-              <Link href="/privacy" className="hover:underline">Privacy</Link>
-              <Link href="/terms" className="hover:underline">Terms</Link>
-              <a href="mailto:support@velt.com" className="hover:underline">support@velt.com</a>
+      {/* FOOTER */}
+      <footer className="w-full bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
+            <div>
+              <div className="font-bold text-black text-lg mb-2">VELT</div>
+              <p className="text-sm text-gray-600">Billboard content management system.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-black mb-4">Links</h4>
+              <div className="space-y-2 text-sm">
+                <Link href="/privacy" className="text-gray-600 hover:text-black transition">Privacy Policy</Link>
+                <br />
+                <Link href="/support" className="text-gray-600 hover:text-black transition">Support</Link>
+                <br />
+                <Link href="/investors" className="text-gray-600 hover:text-black transition">Investors</Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-black mb-4">Contact</h4>
+              <p className="text-sm text-gray-600">support@velt.app</p>
             </div>
           </div>
-
-          <div className="mt-6 text-xs text-slate-400">© {new Date().getFullYear()} VELT. All rights reserved.</div>
+          <div className="border-t border-gray-200 pt-8 text-sm text-gray-500 text-center">
+            <p>© {new Date().getFullYear()} VELT. All rights reserved.</p>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
+
 
 
 

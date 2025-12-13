@@ -7,11 +7,13 @@ import { supabase } from "@/lib/supabaseClient";
 
 declare global {
   interface Window {
-    PaystackPop?: any;
-    __velt_paystack_callback_named?: (resp: any) => void;
+    PaystackPop?: {
+      setup: (config: Record<string, unknown>) => void;
+      openIframe: () => void;
+    };
+    __velt_paystack_callback_named?: (resp: Record<string, unknown>) => void;
     __velt_paystack_onclose_named?: () => void;
-    // alias
-    callback?: (resp: any) => void;
+    callback?: (resp: Record<string, unknown>) => void;
     onClose?: () => void;
   }
 }
@@ -66,7 +68,7 @@ export default function ListerPlanPage(): JSX.Element {
   }, []);
 
   const amountInPesewas = useMemo(() => Math.round(PRICE_GHS * 100), []);
-  const reference = useMemo(() => "VELT-LISTER-" + Date.now().toString() + "-" + Math.floor(Math.random() * 1e6).toString(), []);
+  const reference = useMemo(() => "ATMOSDEV-LISTER-" + Date.now().toString() + "-" + Math.floor(Math.random() * 1e6).toString(), []);
 
   // keep the heavy DOM tweaks in a helper
   const adjustIframePresentation = () => {
@@ -107,7 +109,7 @@ export default function ListerPlanPage(): JSX.Element {
   };
 
   // inner async handler (not the global) — performs server notify
-  const handlePayCallbackInner = async (resp: any) => {
+  const handlePayCallbackInner = async (resp: Record<string, unknown>) => {
     try {
       const { data } = await supabase.auth.getUser();
       const userId = data?.user?.id ?? null;
@@ -148,20 +150,18 @@ export default function ListerPlanPage(): JSX.Element {
     if (typeof window.__velt_paystack_callback_named !== "function") {
       // named non-async function wrapper that calls the async inner handler
       // important: function is function declaration assigned to window (not arrow, not async)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).__velt_paystack_callback_named = function (resp: any) {
+      (window as unknown as Record<string, unknown>).__velt_paystack_callback_named = function (resp: Record<string, unknown>) {
         // call async inner but don't make this function async
         void handlePayCallbackInner(resp);
       };
       // alias for older expectations (some Paystack variants)
       window.callback = (window as any).__velt_paystack_callback_named;
     }
-
     if (typeof window.__velt_paystack_onclose_named !== "function") {
-      (window as any).__velt_paystack_onclose_named = function () {
+      (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named = function () {
         console.log("Paystack checkout closed (global onclose)");
       };
-      window.onClose = (window as any).__velt_paystack_onclose_named;
+      window.onClose = (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named;
     }
   };
 
@@ -236,26 +236,26 @@ export default function ListerPlanPage(): JSX.Element {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#05233c", padding: 28, fontFamily: "system-ui, Arial, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#000000", padding: 28, fontFamily: "system-ui, Arial, sans-serif" }}>
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ margin: 0, fontSize: 28 }}>Lister Plan</h1>
+          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "#000000" }}>Renew Subscription</h1>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 12, color: "#6b7280" }}>Monthly</div>
-            <div style={{ fontWeight: 800, color: "#0b61d6" }}>GHS {PRICE_GHS.toFixed(2)}</div>
+            <div style={{ fontWeight: 800, color: "#d4af37" }}>GHS {PRICE_GHS.toFixed(2)}</div>
           </div>
         </header>
 
-        <section style={{ marginTop: 18, border: "1px solid #e6eef3", padding: 16, borderRadius: 10, background: "#f8fbff" }}>
+        <section style={{ marginTop: 18, border: "2px solid #d4af37", padding: 16, borderRadius: 10, background: "#faf5f0" }}>
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Name</div>
-              <div style={{ fontWeight: 700 }}>{profile?.full_name ?? "—"}</div>
+              <div style={{ fontWeight: 700, color: "#000000" }}>{profile?.full_name ?? "Not provided"}</div>
             </div>
 
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Email</div>
-              <div style={{ fontWeight: 700 }}>{profile?.email ?? "—"}</div>
+              <div style={{ fontWeight: 700, color: "#000000" }}>{profile?.email ?? "Not provided"}</div>
             </div>
 
             <div>
@@ -263,8 +263,8 @@ export default function ListerPlanPage(): JSX.Element {
                 onClick={handlePay}
                 disabled={processing}
                 style={{
-                  background: processing ? "#93c5fd" : "#0b61d6",
-                  color: "#fff",
+                  background: processing ? "#c9a461" : "#d4af37",
+                  color: "#000000",
                   padding: "12px 18px",
                   borderRadius: 10,
                   border: "none",
@@ -272,11 +272,11 @@ export default function ListerPlanPage(): JSX.Element {
                   fontWeight: 800,
                 }}
               >
-                {processing ? "Processing..." : "Pay GHS " + PRICE_GHS.toFixed(2)}
+                {processing ? "Processing..." : "Renew GHS " + PRICE_GHS.toFixed(2)}
               </button>
             </div>
           </div>
-          <div style={{ marginTop: 12, fontSize: 13, color: "#475569" }}>Single subscription — after paying you can publish stays, cars or taxis.</div>
+          <div style={{ marginTop: 12, fontSize: 13, color: "#475569" }}>Renew your subscription to continue publishing listings. Your subscription will be extended by another month after payment.</div>
         </section>
       </div>
     </div>

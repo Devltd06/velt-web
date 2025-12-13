@@ -64,36 +64,45 @@ export default function SubscriptionClient() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
       <div className="text-center mb-6">
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-gray-700">
           {userData?.email || "unknown@email.com"}
         </div>
-        <div className="text-lg text-white">{userData?.username || "---"}</div>
-        <h2 className="text-2xl font-bold mt-3">Choose Your Plan</h2>
+        <div className="text-lg text-black font-semibold">{userData?.username || "---"}</div>
+        <h2 className="text-3xl font-bold mt-3 text-black">Choose Your Plan</h2>
       </div>
 
       {loadingRate ? (
-        <div className="text-gray-400">Loading rates…</div>
+        <div className="text-gray-700">Loading rates...</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
           {plans.map((p) => (
             <div
               key={p.name}
               onClick={() => handleSelect(p)}
-              className="cursor-pointer bg-gray-800 p-6 rounded-xl hover:bg-gray-700 transition"
+              className="cursor-pointer bg-white border-2 border-gray-300 p-6 rounded-xl hover:border-yellow-500 transition"
+              style={{ borderColor: "currentColor" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#d4af37";
+                e.currentTarget.style.boxShadow = "0 0 8px rgba(212, 175, 55, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#d3d3d3";
+                e.currentTarget.style.boxShadow = "none";
+              }}
             >
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="font-semibold text-lg">{p.name}</div>
+                  <div className="font-semibold text-lg text-black">{p.name}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium">
+                  <div className="font-bold text-black">
                     ${p.priceUSD.toFixed(2)}
                   </div>
                   {exchangeRate && (
-                    <div className="text-sm text-gray-400">
-                      ≈ GHS {(p.priceUSD * exchangeRate).toFixed(2)}
+                    <div className="text-sm text-gray-600">
+                      GHS {(p.priceUSD * exchangeRate).toFixed(2)}
                     </div>
                   )}
                 </div>

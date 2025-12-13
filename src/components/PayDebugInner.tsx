@@ -74,34 +74,39 @@ export default function PayDebugInner() {
     [priceGHS]
   );
   const reference = useMemo(
-    () => `VELT-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
+    () => `ATMOSDEV-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
     []
   );
 
   if (!payData) {
     return (
-      <div className="min-h-screen flex items-start justify-center bg-gray-900 text-white p-8">
+      <div className="min-h-screen flex items-start justify-center bg-white text-black p-8">
         <div className="max-w-2xl w-full">
-          <h2 className="text-2xl font-bold mb-4">Missing payment details</h2>
-          <p className="mb-4">
-            This page requires payment data passed in the `data` query param. Go
-            back to the subscription page and choose a plan.
+          <h2 className="text-2xl font-bold mb-4">Missing Payment Details</h2>
+          <p className="mb-4 text-gray-700">
+            This page requires payment data from the subscription page. Go back and choose a plan.
           </p>
           <button
             onClick={() => router.back()}
-            className="bg-blue-600 px-4 py-2 rounded"
+            className="px-4 py-2 rounded font-semibold text-black"
+            style={{ backgroundColor: "#d4af37" }}
           >
             Go Back
           </button>
 
-          <div className="mt-6 bg-black/40 p-4 rounded">
-            <h3 className="font-semibold mb-2">Debug logs</h3>
+          <div className="mt-6 bg-gray-100 p-4 rounded border border-gray-300">
+            <h3 className="font-semibold mb-2 text-black">Debug Logs</h3>
             <div
               style={{
                 maxHeight: 300,
                 overflow: "auto",
                 fontSize: 12,
                 whiteSpace: "pre-wrap",
+                color: "#000000",
+                background: "#ffffff",
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #d4af37",
               }}
             >
               {logs.map((l, i) => (
@@ -157,7 +162,7 @@ export default function PayDebugInner() {
 
       if (!amountInPesewas || amountInPesewas <= 0) {
         addLog("Aborting: invalid amountInPesewas = " + amountInPesewas);
-        alert("Invalid amount (0). Ensure priceGHS is a valid number > 0.");
+        alert("Invalid amount (0). Ensure priceGHS is a valid number greater than 0.");
         return;
       }
 
@@ -194,7 +199,7 @@ export default function PayDebugInner() {
               } catch (e) {
                 addLog("API call error: " + String(e));
               }
-              alert("Payment successful 🎉");
+              alert("Payment successful");
               router.push("/");
             })();
           },
@@ -224,40 +229,46 @@ export default function PayDebugInner() {
   };
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gray-900 text-white p-8 space-y-6">
+    <div className="min-h-screen flex items-start justify-center bg-white text-black p-8 space-y-6">
       <div className="max-w-2xl w-full space-y-6">
-        <div className="bg-gray-800 rounded p-6">
+        <div className="bg-white border border-gray-300 rounded p-6">
           <h2 className="text-2xl font-bold mb-2">Confirm Payment</h2>
-          <p className="text-gray-300">Email: {email}</p>
-          <p className="text-gray-300">
+          <p className="text-gray-700">Email: {email}</p>
+          <p className="text-gray-700">
             {username} {fullName ? `(${fullName})` : ""}
           </p>
-          <p className="text-gray-300">Plan: {plan}</p>
-          <p className="text-gray-300 mb-3">
-            ${Number(priceUSD).toFixed(2)} (≈ GHS {Number(pghs).toFixed(2)})
+          <p className="text-gray-700">Plan: {plan}</p>
+          <p className="text-gray-700 mb-3">
+            ${Number(priceUSD).toFixed(2)} (GHS {Number(pghs).toFixed(2)})
           </p>
 
           <button
             onClick={handlePay}
-            className="bg-blue-600 px-6 py-3 rounded font-semibold"
+            className="px-6 py-3 rounded font-semibold text-black"
+            style={{ backgroundColor: "#d4af37" }}
           >
             Pay with Paystack
           </button>
         </div>
 
-        <div className="bg-black/40 p-4 rounded">
-          <h3 className="font-semibold mb-2">Debug logs (latest at bottom)</h3>
+        <div className="bg-gray-100 p-4 rounded border border-gray-300">
+          <h3 className="font-semibold mb-2 text-black">Debug Logs</h3>
           <div
             style={{
               maxHeight: 300,
               overflow: "auto",
               fontSize: 12,
               whiteSpace: "pre-wrap",
+              color: "#000000",
+              background: "#ffffff",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #d4af37",
             }}
           >
             {logs.length === 0 ? (
-              <div className="text-gray-400">
-                No logs yet — click Pay to start.
+              <div className="text-gray-600">
+                No logs yet. Click Pay to start.
               </div>
             ) : (
               logs.map((l, i) => (
