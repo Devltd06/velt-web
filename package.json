@@ -19,7 +19,7 @@
     "server": "^1.0.42",
     "supabase": "^2.40.7"
   },
-  "devDependencies": {
+  "devDependencies": { 
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

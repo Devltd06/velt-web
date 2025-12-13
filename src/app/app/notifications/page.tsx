@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaBell, FaHeart, FaComment, FaUserPlus, FaAt, FaShare, 
@@ -8,10 +9,32 @@ import {
   FaArrowLeft
 } from 'react-icons/fa';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
 
 const GOLD = '#D4AF37';
+const PLACEHOLDER_AVATAR = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
 type NotificationType = 'like' | 'comment' | 'follow' | 'mention' | 'share' | 'message' | 'story' | 'product' | 'post';
+
+interface Profile {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+interface NotificationDB {
+  id: string;
+  recipient_id: string;
+  sender_id: string | null;
+  type: string;
+  content: string | null;
+  reference_id: string | null;
+  reference_type: string | null;
+  is_read: boolean;
+  created_at: string;
+  sender?: Profile;
+}
 
 interface Notification {
   id: string;
@@ -56,78 +79,76 @@ const getNotificationText = (type: NotificationType, actorName: string) => {
   }
 };
 
-// Mock notifications
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'like',
-    actor: { name: 'Sarah Johnson', avatar: 'https://i.pravatar.cc/150?img=1' },
-    image: 'https://picsum.photos/100/100?random=1',
-    read: false,
-    timestamp: '2 min ago'
-  },
-  {
-    id: '2',
-    type: 'follow',
-    actor: { name: 'Mike Chen', avatar: 'https://i.pravatar.cc/150?img=2' },
-    read: false,
-    timestamp: '15 min ago'
-  },
-  {
-    id: '3',
-    type: 'comment',
-    actor: { name: 'Emma Wilson', avatar: 'https://i.pravatar.cc/150?img=3' },
-    content: 'This is amazing! Love the creativity 🔥',
-    read: false,
-    timestamp: '1 hour ago'
-  },
-  {
-    id: '4',
-    type: 'message',
-    actor: { name: 'James Brown', avatar: 'https://i.pravatar.cc/150?img=4' },
-    content: 'Hey! Are you available for a collab?',
-    read: true,
-    timestamp: '3 hours ago'
-  },
-  {
-    id: '5',
-    type: 'story',
-    actor: { name: 'Lisa Park', avatar: 'https://i.pravatar.cc/150?img=5' },
-    read: true,
-    timestamp: '5 hours ago'
-  },
-  {
-    id: '6',
-    type: 'product',
-    actor: { name: 'Alex Kim', avatar: 'https://i.pravatar.cc/150?img=6' },
-    content: 'New Designer Sneakers - Limited Edition',
-    image: 'https://picsum.photos/100/100?random=2',
-    read: true,
-    timestamp: 'Yesterday'
-  },
-  {
-    id: '7',
-    type: 'mention',
-    actor: { name: 'Chris Davis', avatar: 'https://i.pravatar.cc/150?img=7' },
-    content: '@you check this out!',
-    read: true,
-    timestamp: 'Yesterday'
-  },
-  {
-    id: '8',
-    type: 'share',
-    actor: { name: 'Nina Rodriguez', avatar: 'https://i.pravatar.cc/150?img=8' },
-    read: true,
-    timestamp: '2 days ago'
-  },
-];
+// Helper to format relative time
+const formatRelativeTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSecs < 60) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString();
+};
 
 type FilterType = 'all' | 'unread';
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const router = useRouter();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterType>('all');
   const [markingAllRead, setMarkingAllRead] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch notifications from Supabase
+  const fetchNotifications = useCallback(async (uid: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('notifications')
+      .select(`
+        *,
+        sender:sender_id(id, username, full_name, avatar_url)
+      `)
+      .eq('recipient_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (!error && data) {
+      const formatted: Notification[] = data.map((n: NotificationDB) => ({
+        id: n.id,
+        type: (n.type || 'post') as NotificationType,
+        actor: {
+          name: n.sender?.full_name || n.sender?.username || 'Someone',
+          avatar: n.sender?.avatar_url || PLACEHOLDER_AVATAR,
+        },
+        content: n.content || undefined,
+        read: n.is_read,
+        timestamp: formatRelativeTime(n.created_at),
+      }));
+      setNotifications(formatted);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/loginlister');
+        return;
+      }
+      setUserId(session.user.id);
+      fetchNotifications(session.user.id);
+    };
+    checkAuth();
+  }, [router, fetchNotifications]);
 
   const filteredNotifications = filter === 'all' 
     ? notifications 
@@ -135,21 +156,42 @@ export default function NotificationsPage() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
+    // Update local state
     setNotifications(prev => 
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
+    // Update in database
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', id);
   };
 
   const markAllAsRead = async () => {
+    if (!userId) return;
     setMarkingAllRead(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Update in database
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('recipient_id', userId)
+      .eq('is_read', false);
+    
+    // Update local state
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setMarkingAllRead(false);
   };
 
-  const deleteNotification = (id: string) => {
+  const deleteNotification = async (id: string) => {
+    // Update local state
     setNotifications(prev => prev.filter(n => n.id !== id));
+    // Delete from database
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
   };
 
   // Group notifications by date
@@ -162,6 +204,14 @@ export default function NotificationsPage() {
     groups[date].push(notification);
     return groups;
   }, {} as Record<string, Notification[]>);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">

@@ -1,169 +1,228 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   FaArrowLeft, FaSearch, FaPaperPlane, FaImage, FaSmile, 
   FaEllipsisV, FaCheck, FaCheckDouble, FaPhone, FaVideo,
-  FaBellSlash, FaPlus, FaEnvelope, FaThumbtack
+  FaPlus, FaEnvelope
 } from 'react-icons/fa';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
 
 const GOLD = '#D4AF37';
+const PLACEHOLDER_AVATAR = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
+interface Profile {
+  id: string;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+}
 
 interface Message {
   id: string;
-  senderId: string;
+  conversation_id: string;
+  sender_id: string;
   content: string;
-  timestamp: string;
-  read: boolean;
-  type: 'text' | 'image' | 'story';
-  imageUrl?: string;
+  created_at: string;
+  read?: boolean;
+  type?: 'text' | 'image' | 'story';
+  image_url?: string | null;
+}
+
+interface ConversationParticipant {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  profile?: Profile | null;
 }
 
 interface Conversation {
   id: string;
-  user: {
-    id: string;
-    name: string;
-    avatar: string;
-    online: boolean;
-  };
-  lastMessage: Message;
-  unreadCount: number;
-  pinned: boolean;
-  muted: boolean;
+  is_group?: boolean;
+  title?: string | null;
+  created_at: string;
+  participants?: ConversationParticipant[];
+  lastMessage?: Message | null;
+  unreadCount?: number;
+  otherUser?: Profile | null;
 }
 
-const mockConversations: Conversation[] = [
-  {
-    id: '1',
-    user: {
-      id: 'u1',
-      name: 'Sarah Johnson',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      online: true
-    },
-    lastMessage: {
-      id: 'm1',
-      senderId: 'u1',
-      content: 'Hey! Did you see the new billboard design?',
-      timestamp: '2 min ago',
-      read: false,
-      type: 'text'
-    },
-    unreadCount: 3,
-    pinned: true,
-    muted: false
-  },
-  {
-    id: '2',
-    user: {
-      id: 'u2',
-      name: 'Mike Chen',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      online: true
-    },
-    lastMessage: {
-      id: 'm2',
-      senderId: 'me',
-      content: 'I\'ll send the files tomorrow 👍',
-      timestamp: '15 min ago',
-      read: true,
-      type: 'text'
-    },
-    unreadCount: 0,
-    pinned: true,
-    muted: false
-  },
-  {
-    id: '3',
-    user: {
-      id: 'u3',
-      name: 'Emma Wilson',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      online: false
-    },
-    lastMessage: {
-      id: 'm3',
-      senderId: 'u3',
-      content: 'Shared a story',
-      timestamp: '1 hour ago',
-      read: true,
-      type: 'story'
-    },
-    unreadCount: 0,
-    pinned: false,
-    muted: false
-  },
-  {
-    id: '4',
-    user: {
-      id: 'u4',
-      name: 'James Brown',
-      avatar: 'https://i.pravatar.cc/150?img=4',
-      online: false
-    },
-    lastMessage: {
-      id: 'm4',
-      senderId: 'u4',
-      content: 'Thanks for the help!',
-      timestamp: '3 hours ago',
-      read: true,
-      type: 'text'
-    },
-    unreadCount: 0,
-    pinned: false,
-    muted: true
-  },
-  {
-    id: '5',
-    user: {
-      id: 'u5',
-      name: 'Lisa Park',
-      avatar: 'https://i.pravatar.cc/150?img=5',
-      online: true
-    },
-    lastMessage: {
-      id: 'm5',
-      senderId: 'me',
-      content: 'Sent a photo',
-      timestamp: 'Yesterday',
-      read: true,
-      type: 'image'
-    },
-    unreadCount: 0,
-    pinned: false,
-    muted: false
-  },
-];
-
-// Chat Messages for selected conversation
-const mockMessages: Message[] = [
-  { id: '1', senderId: 'u1', content: 'Hey there! 👋', timestamp: '10:30 AM', read: true, type: 'text' },
-  { id: '2', senderId: 'me', content: 'Hi Sarah! How are you?', timestamp: '10:31 AM', read: true, type: 'text' },
-  { id: '3', senderId: 'u1', content: 'I\'m great! Working on a new project', timestamp: '10:32 AM', read: true, type: 'text' },
-  { id: '4', senderId: 'u1', content: 'Check out this design I made', timestamp: '10:33 AM', read: true, type: 'image', imageUrl: 'https://picsum.photos/400/300?random=1' },
-  { id: '5', senderId: 'me', content: 'Wow, that looks amazing! 🔥', timestamp: '10:35 AM', read: true, type: 'text' },
-  { id: '6', senderId: 'u1', content: 'Thanks! I spent hours on it', timestamp: '10:36 AM', read: true, type: 'text' },
-  { id: '7', senderId: 'me', content: 'The attention to detail is incredible', timestamp: '10:37 AM', read: true, type: 'text' },
-  { id: '8', senderId: 'u1', content: 'Hey! Did you see the new billboard design?', timestamp: '10:40 AM', read: false, type: 'text' },
-];
-
 export default function ChatsPage() {
-  const [conversations] = useState(mockConversations);
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [conversationsLoading, setConversationsLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedChat, setSelectedChat] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const filteredConversations = conversations.filter(c =>
-    c.user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Check auth
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/app/welcome');
+        return;
+      }
+      setUserId(session.user.id);
+      setLoading(false);
+    };
+    checkAuth();
+  }, [router]);
 
-  const pinnedConversations = filteredConversations.filter(c => c.pinned);
-  const regularConversations = filteredConversations.filter(c => !c.pinned);
+  // Fetch conversations
+  const fetchConversations = useCallback(async () => {
+    if (!userId) return;
+
+    setConversationsLoading(true);
+    try {
+      // Get conversation participants for this user
+      const { data: participantRows, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', userId);
+
+      if (partError) {
+        console.warn('[chats] fetchConversations participants err', partError);
+        setConversations([]);
+        return;
+      }
+
+      const conversationIds = (participantRows || []).map(p => p.conversation_id);
+
+      if (conversationIds.length === 0) {
+        setConversations([]);
+        setConversationsLoading(false);
+        return;
+      }
+
+      // Get conversations
+      const { data: convRows, error: convError } = await supabase
+        .from('conversations')
+        .select('*')
+        .in('id', conversationIds)
+        .order('created_at', { ascending: false });
+
+      if (convError) {
+        console.warn('[chats] fetchConversations conversations err', convError);
+        setConversations([]);
+        return;
+      }
+
+      // Get all participants for these conversations
+      const { data: allParticipants } = await supabase
+        .from('conversation_participants')
+        .select('*')
+        .in('conversation_id', conversationIds);
+
+      // Get profiles for all participants
+      const allUserIds = Array.from(new Set((allParticipants || []).map(p => p.user_id)));
+      const profilesMap: Record<string, Profile> = {};
+
+      if (allUserIds.length > 0) {
+        const { data: profRows } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, avatar_url')
+          .in('id', allUserIds);
+
+        (profRows || []).forEach(p => {
+          profilesMap[p.id] = { ...p, avatar_url: p.avatar_url || PLACEHOLDER_AVATAR };
+        });
+      }
+
+      // Get last message for each conversation
+      const conversationsWithDetails = await Promise.all(
+        (convRows || []).map(async (conv) => {
+          // Get last message
+          const { data: lastMsgRows } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          const lastMessage = lastMsgRows && lastMsgRows.length > 0 ? lastMsgRows[0] : null;
+
+          // Find other user in this conversation (for 1-on-1 chats)
+          const participants = (allParticipants || []).filter(p => p.conversation_id === conv.id);
+          const otherParticipant = participants.find(p => p.user_id !== userId);
+          const otherUser = otherParticipant ? profilesMap[otherParticipant.user_id] : null;
+
+          return {
+            ...conv,
+            lastMessage,
+            participants: participants.map(p => ({
+              ...p,
+              profile: profilesMap[p.user_id],
+            })),
+            otherUser,
+            unreadCount: 0, // Would need to track this separately
+          };
+        })
+      );
+
+      setConversations(conversationsWithDetails);
+    } catch (err) {
+      console.warn('[chats] fetchConversations exception', err);
+      setConversations([]);
+    } finally {
+      setConversationsLoading(false);
+    }
+  }, [userId]);
+
+  // Fetch messages for selected conversation
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    setMessagesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+
+      if (error) {
+        console.warn('[chats] fetchMessages err', error);
+        setMessages([]);
+        return;
+      }
+
+      setMessages(data || []);
+    } catch (err) {
+      console.warn('[chats] fetchMessages exception', err);
+      setMessages([]);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, []);
+
+  // Load conversations when userId is set
+  useEffect(() => {
+    if (userId) {
+      fetchConversations();
+    }
+  }, [userId, fetchConversations]);
+
+  // Load messages when chat is selected
+  useEffect(() => {
+    if (selectedChat) {
+      fetchMessages(selectedChat.id);
+    }
+  }, [selectedChat, fetchMessages]);
+
+  // Filter conversations
+  const filteredConversations = conversations.filter(c => {
+    const name = c.otherUser?.full_name || c.otherUser?.username || c.title || '';
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -173,26 +232,80 @@ export default function ChatsPage() {
     if (selectedChat) scrollToBottom();
   }, [messages, selectedChat]);
 
-  const sendMessage = () => {
-    if (!newMessage.trim()) return;
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedChat || !userId) return;
     
-    const message: Message = {
-      id: Date.now().toString(),
-      senderId: 'me',
-      content: newMessage,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      read: false,
-      type: 'text'
-    };
-    
-    setMessages(prev => [...prev, message]);
-    setNewMessage('');
+    setSending(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: selectedChat.id,
+          sender_id: userId,
+          content: newMessage.trim(),
+        });
+
+      if (error) {
+        console.warn('[chats] sendMessage err', error);
+        return;
+      }
+
+      // Add message locally for instant feedback
+      const tempMessage: Message = {
+        id: Date.now().toString(),
+        conversation_id: selectedChat.id,
+        sender_id: userId,
+        content: newMessage.trim(),
+        created_at: new Date().toISOString(),
+        type: 'text',
+      };
+      
+      setMessages(prev => [...prev, tempMessage]);
+      setNewMessage('');
+      
+      // Refresh messages to get server-side ID
+      setTimeout(() => fetchMessages(selectedChat.id), 500);
+    } catch (err) {
+      console.warn('[chats] sendMessage exception', err);
+    } finally {
+      setSending(false);
+    }
   };
 
   const formatTime = (timestamp: string) => {
-    if (timestamp.includes('ago') || timestamp === 'Yesterday') return timestamp;
-    return timestamp;
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(mins / 60);
+      const days = Math.floor(hours / 24);
+
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return `${mins} min ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days === 1) return 'Yesterday';
+      return date.toLocaleDateString();
+    } catch {
+      return timestamp;
+    }
   };
+
+  const formatMessageTime = (timestamp: string) => {
+    try {
+      return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return timestamp;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white flex">
@@ -229,17 +342,20 @@ export default function ChatsPage() {
 
         {/* Conversations */}
         <div className="flex-1 overflow-y-auto">
-          {pinnedConversations.length > 0 && (
-            <div>
-              <p className="px-4 py-2 text-xs font-medium text-gray-400 uppercase">Pinned</p>
-              {pinnedConversations.map(renderConversation)}
+          {conversationsLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
             </div>
-          )}
-          
-          {regularConversations.length > 0 && (
+          ) : filteredConversations.length === 0 ? (
+            <div className="text-center py-12 text-white/50">
+              <FaEnvelope className="text-4xl mx-auto mb-4 opacity-50" />
+              <p>{searchQuery ? 'No conversations found' : 'No conversations yet'}</p>
+              <p className="text-sm mt-2">Start a chat by messaging someone!</p>
+            </div>
+          ) : (
             <div>
-              <p className="px-4 py-2 text-xs font-medium text-gray-400 uppercase">All Messages</p>
-              {regularConversations.map(renderConversation)}
+              <p className="px-4 py-2 text-xs font-medium text-gray-400 uppercase">Conversations</p>
+              {filteredConversations.map(renderConversation)}
             </div>
           )}
         </div>
@@ -259,18 +375,24 @@ export default function ChatsPage() {
               </button>
               <div className="relative">
                 <img
-                  src={selectedChat.user.avatar}
-                  alt={selectedChat.user.name}
+                  src={selectedChat.otherUser?.avatar_url || PLACEHOLDER_AVATAR}
+                  alt={selectedChat.otherUser?.full_name || selectedChat.otherUser?.username || 'User'}
                   className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = PLACEHOLDER_AVATAR;
+                  }}
                 />
-                {selectedChat.user.online && (
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black" />
-                )}
               </div>
               <div>
-                <h2 className="font-semibold">{selectedChat.user.name}</h2>
+                <h2 className="font-semibold">
+                  {selectedChat.is_group 
+                    ? selectedChat.title 
+                    : selectedChat.otherUser?.full_name || selectedChat.otherUser?.username || 'User'}
+                </h2>
                 <p className="text-xs text-gray-400">
-                  {selectedChat.user.online ? 'Online' : 'Offline'}
+                  {selectedChat.is_group 
+                    ? `${selectedChat.participants?.length || 0} members`
+                    : 'Tap to view profile'}
                 </p>
               </div>
             </div>
@@ -290,57 +412,71 @@ export default function ChatsPage() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message, index) => {
-              const isMe = message.senderId === 'me';
-              const showAvatar = !isMe && (index === 0 || messages[index - 1].senderId !== message.senderId);
-              
-              return (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                >
-                  {!isMe && showAvatar && (
-                    <img
-                      src={selectedChat.user.avatar}
-                      alt=""
-                      className="w-8 h-8 rounded-full mr-2 self-end"
-                    />
-                  )}
-                  {!isMe && !showAvatar && <div className="w-10" />}
-                  
-                  <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
-                    {message.type === 'image' && message.imageUrl ? (
+            {messagesLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-12 text-white/50">
+                <p>No messages yet</p>
+                <p className="text-sm mt-2">Send a message to start the conversation!</p>
+              </div>
+            ) : (
+              messages.map((message, index) => {
+                const isMe = message.sender_id === userId;
+                const showAvatar = !isMe && (index === 0 || messages[index - 1].sender_id !== message.sender_id);
+                
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {!isMe && showAvatar && (
                       <img
-                        src={message.imageUrl}
+                        src={selectedChat.otherUser?.avatar_url || PLACEHOLDER_AVATAR}
                         alt=""
-                        className="rounded-2xl max-w-full"
+                        className="w-8 h-8 rounded-full mr-2 self-end"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = PLACEHOLDER_AVATAR;
+                        }}
                       />
-                    ) : (
-                      <div
-                        className={`px-4 py-2 rounded-2xl ${
-                          isMe 
-                            ? 'rounded-br-md' 
-                            : 'bg-white/10 rounded-bl-md'
-                        }`}
-                        style={isMe ? { backgroundColor: GOLD, color: 'black' } : {}}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                      </div>
                     )}
-                    <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <span className="text-xs text-gray-500">{message.timestamp}</span>
-                      {isMe && (
-                        message.read 
-                          ? <FaCheckDouble className="text-xs" style={{ color: GOLD }} />
-                          : <FaCheck className="text-xs text-gray-500" />
+                    {!isMe && !showAvatar && <div className="w-10" />}
+                    
+                    <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'}`}>
+                      {message.image_url ? (
+                        <img
+                          src={message.image_url}
+                          alt=""
+                          className="rounded-2xl max-w-full"
+                        />
+                      ) : (
+                        <div
+                          className={`px-4 py-2 rounded-2xl ${
+                            isMe 
+                              ? 'rounded-br-md' 
+                              : 'bg-white/10 rounded-bl-md'
+                          }`}
+                          style={isMe ? { backgroundColor: GOLD, color: 'black' } : {}}
+                        >
+                          <p className="text-sm">{message.content}</p>
+                        </div>
                       )}
+                      <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                        <span className="text-xs text-gray-500">{formatMessageTime(message.created_at)}</span>
+                        {isMe && (
+                          message.read 
+                            ? <FaCheckDouble className="text-xs" style={{ color: GOLD }} />
+                            : <FaCheck className="text-xs text-gray-500" />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -355,8 +491,9 @@ export default function ChatsPage() {
                 placeholder="Type a message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                className="flex-1 bg-white/10 rounded-full py-2 px-4 focus:outline-none focus:ring-2 transition-all"
+                onKeyPress={(e) => e.key === 'Enter' && !sending && sendMessage()}
+                disabled={sending}
+                className="flex-1 bg-white/10 rounded-full py-2 px-4 focus:outline-none focus:ring-2 transition-all disabled:opacity-50"
                 style={{ '--tw-ring-color': GOLD } as React.CSSProperties}
               />
               <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -364,7 +501,8 @@ export default function ChatsPage() {
               </button>
               <button
                 onClick={sendMessage}
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95"
+                disabled={sending || !newMessage.trim()}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-50"
                 style={{ backgroundColor: GOLD }}
               >
                 <FaPaperPlane className="text-black" />
@@ -385,6 +523,11 @@ export default function ChatsPage() {
   );
 
   function renderConversation(conversation: Conversation) {
+    const displayName = conversation.is_group 
+      ? conversation.title 
+      : conversation.otherUser?.full_name || conversation.otherUser?.username || 'User';
+    const avatar = conversation.otherUser?.avatar_url || PLACEHOLDER_AVATAR;
+    
     return (
       <motion.div
         key={conversation.id}
@@ -397,30 +540,32 @@ export default function ChatsPage() {
         <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0">
             <img
-              src={conversation.user.avatar}
-              alt={conversation.user.name}
+              src={avatar}
+              alt={displayName || 'User'}
               className="w-12 h-12 rounded-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = PLACEHOLDER_AVATAR;
+              }}
             />
-            {conversation.user.online && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black" />
-            )}
           </div>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold truncate">{conversation.user.name}</h3>
-              <span className="text-xs text-gray-400">{formatTime(conversation.lastMessage.timestamp)}</span>
+              <h3 className="font-semibold truncate">{displayName}</h3>
+              {conversation.lastMessage && (
+                <span className="text-xs text-gray-400">
+                  {formatTime(conversation.lastMessage.created_at)}
+                </span>
+              )}
             </div>
             <div className="flex items-center justify-between mt-1">
-              <p className={`text-sm truncate ${conversation.unreadCount > 0 ? 'text-white font-medium' : 'text-gray-400'}`}>
-                {conversation.lastMessage.senderId === 'me' && (
-                  conversation.lastMessage.read 
-                    ? <FaCheckDouble className="inline mr-1" style={{ color: GOLD }} />
-                    : <FaCheck className="inline mr-1 text-gray-500" />
+              <p className={`text-sm truncate ${conversation.unreadCount && conversation.unreadCount > 0 ? 'text-white font-medium' : 'text-gray-400'}`}>
+                {conversation.lastMessage?.sender_id === userId && (
+                  <FaCheck className="inline mr-1 text-gray-500" />
                 )}
-                {conversation.lastMessage.content}
+                {conversation.lastMessage?.content || 'No messages yet'}
               </p>
-              {conversation.unreadCount > 0 && (
+              {conversation.unreadCount && conversation.unreadCount > 0 && (
                 <span 
                   className="w-5 h-5 rounded-full text-xs flex items-center justify-center text-black font-bold"
                   style={{ backgroundColor: GOLD }}
@@ -430,18 +575,6 @@ export default function ChatsPage() {
               )}
             </div>
           </div>
-        </div>
-        
-        {/* Status indicators */}
-        <div className="flex items-center gap-2 mt-2 pl-15">
-          {conversation.pinned && (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              <FaThumbtack /> Pinned
-            </span>
-          )}
-          {conversation.muted && (
-            <FaBellSlash className="text-xs text-gray-500" />
-          )}
         </div>
       </motion.div>
     );

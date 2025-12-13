@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   FaHome,
-  FaCompass,
-  FaShoppingCart,
+  FaShoppingBag,
+  FaPlayCircle,
   FaBullhorn,
-  FaUser,
+  FaComments,
   FaFilter,
   FaMapMarkerAlt,
   FaCalendar,
   FaEye,
-  FaStar,
   FaArrowRight,
   FaTimes,
 } from "react-icons/fa";
@@ -22,12 +21,46 @@ import { supabase } from "@/lib/supabaseClient";
 
 const VELT_ACCENT = "#D4AF37";
 
+// Types
+interface Profile {
+  id: string;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+}
+
+interface Billboard {
+  id: string;
+  name: string;
+  location?: string | null;
+  region?: string | null;
+  size?: string | null;
+  price_per_day?: number | null;
+  daily_impressions?: number | null;
+  image_url?: string | null;
+  owner_id?: string | null;
+  is_available?: boolean;
+  created_at: string;
+  profile?: Profile | null;
+}
+
+interface BillboardBooking {
+  id: string;
+  billboard_id: string;
+  user_id: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+  created_at: string;
+  billboard?: Billboard | null;
+}
+
 const navItems = [
   { icon: FaHome, label: "Home", href: "/app/home" },
-  { icon: FaCompass, label: "Explore", href: "/app/explore" },
-  { icon: FaShoppingCart, label: "Marketplace", href: "/app/marketplace" },
+  { icon: FaShoppingBag, label: "Shopr", href: "/app/shopr" },
+  { icon: FaPlayCircle, label: "Contents", href: "/app/contents" },
   { icon: FaBullhorn, label: "Billboards", href: "/app/billboards", active: true },
-  { icon: FaUser, label: "Profile", href: "/app/profile" },
+  { icon: FaComments, label: "Chats", href: "/app/chats" },
 ];
 
 const REGIONS = [
@@ -43,86 +76,22 @@ const REGIONS = [
   "Upper West",
 ];
 
-// Mock billboard data
-const mockBillboards = [
-  {
-    id: "1",
-    name: "Accra Mall Premium",
-    location: "Accra Mall, Spintex Road",
-    region: "Greater Accra",
-    size: "48x14 ft",
-    pricePerDay: 850,
-    impressions: 125000,
-    rating: 4.8,
-    available: true,
-  },
-  {
-    id: "2",
-    name: "Kumasi City Center",
-    location: "Adum, Kumasi",
-    region: "Ashanti",
-    size: "32x10 ft",
-    pricePerDay: 650,
-    impressions: 98000,
-    rating: 4.6,
-    available: true,
-  },
-  {
-    id: "3",
-    name: "Airport Roundabout",
-    location: "Kotoka International Airport",
-    region: "Greater Accra",
-    size: "64x20 ft",
-    pricePerDay: 1200,
-    impressions: 180000,
-    rating: 4.9,
-    available: false,
-  },
-  {
-    id: "4",
-    name: "Tema Motorway",
-    location: "Tema Motorway Junction",
-    region: "Greater Accra",
-    size: "48x14 ft",
-    pricePerDay: 750,
-    impressions: 145000,
-    rating: 4.7,
-    available: true,
-  },
-  {
-    id: "5",
-    name: "Takoradi Market Circle",
-    location: "Market Circle, Takoradi",
-    region: "Western",
-    size: "24x8 ft",
-    pricePerDay: 450,
-    impressions: 65000,
-    rating: 4.4,
-    available: true,
-  },
-  {
-    id: "6",
-    name: "Ho Municipal Center",
-    location: "Ho Town Center",
-    region: "Volta",
-    size: "32x10 ft",
-    pricePerDay: 400,
-    impressions: 52000,
-    rating: 4.3,
-    available: true,
-  },
-];
-
 export default function BillboardsPage() {
   const router = useRouter();
-  const [, setUser] = useState<Record<string, unknown> | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [billboardsLoading, setBillboardsLoading] = useState(true);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"marketplace" | "bookings">("marketplace");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState("All Regions");
-  const [selectedBillboard, setSelectedBillboard] = useState<typeof mockBillboards[0] | null>(null);
+  const [billboards, setBillboards] = useState<Billboard[]>([]);
+  const [bookings, setBookings] = useState<BillboardBooking[]>([]);
+  const [selectedBillboard, setSelectedBillboard] = useState<Billboard | null>(null);
   const [bookingModal, setBookingModal] = useState(false);
+  const [bookingBillboard, setBookingBillboard] = useState<Billboard | null>(null);
   const [bookingDates, setBookingDates] = useState({ start: "", end: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -131,17 +100,165 @@ export default function BillboardsPage() {
         router.push("/app/welcome");
         return;
       }
-      setUser(session.user as unknown as Record<string, unknown>);
+      setUserId(session.user.id);
       setLoading(false);
     };
     checkAuth();
   }, [router]);
 
-  const filteredBillboards = mockBillboards.filter((b) =>
+  // Fetch billboards
+  const fetchBillboards = useCallback(async () => {
+    setBillboardsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("billboards")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.warn("[billboards] fetchBillboards err", error);
+        setBillboards([]);
+        return;
+      }
+
+      // Get profiles for billboard owners
+      const ownerIds = Array.from(new Set((data || []).map((b) => b.owner_id).filter(Boolean)));
+      const profilesMap: Record<string, Profile> = {};
+
+      if (ownerIds.length > 0) {
+        const { data: profRows } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url")
+          .in("id", ownerIds);
+
+        (profRows || []).forEach((p) => {
+          profilesMap[p.id] = p;
+        });
+      }
+
+      const billboardsWithProfiles = (data || []).map((b) => ({
+        ...b,
+        profile: b.owner_id ? profilesMap[b.owner_id] || null : null,
+      }));
+
+      setBillboards(billboardsWithProfiles);
+    } catch (err) {
+      console.warn("[billboards] fetchBillboards exception", err);
+      setBillboards([]);
+    } finally {
+      setBillboardsLoading(false);
+    }
+  }, []);
+
+  // Fetch user's bookings
+  const fetchBookings = useCallback(async () => {
+    if (!userId) return;
+    
+    setBookingsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("billboard_bookings")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.warn("[billboards] fetchBookings err", error);
+        setBookings([]);
+        return;
+      }
+
+      // Get billboard details for bookings
+      const billboardIds = Array.from(new Set((data || []).map((b) => b.billboard_id).filter(Boolean)));
+      const billboardsMap: Record<string, Billboard> = {};
+
+      if (billboardIds.length > 0) {
+        const { data: bbRows } = await supabase
+          .from("billboards")
+          .select("*")
+          .in("id", billboardIds);
+
+        (bbRows || []).forEach((b) => {
+          billboardsMap[b.id] = b;
+        });
+      }
+
+      const bookingsWithBillboards = (data || []).map((booking) => ({
+        ...booking,
+        billboard: billboardsMap[booking.billboard_id] || null,
+      }));
+
+      setBookings(bookingsWithBillboards);
+    } catch (err) {
+      console.warn("[billboards] fetchBookings exception", err);
+      setBookings([]);
+    } finally {
+      setBookingsLoading(false);
+    }
+  }, [userId]);
+
+  // Load data on mount
+  useEffect(() => {
+    if (!loading) {
+      fetchBillboards();
+    }
+  }, [loading, fetchBillboards]);
+
+  // Fetch bookings when user is set or tab changes
+  useEffect(() => {
+    if (userId && activeTab === "bookings") {
+      fetchBookings();
+    }
+  }, [userId, activeTab, fetchBookings]);
+
+  // Filter billboards by region
+  const filteredBillboards = billboards.filter((b) =>
     selectedRegion === "All Regions" ? true : b.region === selectedRegion
   );
 
   const formatCurrency = (value: number) => `GHS ${value.toLocaleString()}`;
+
+  // Handle booking submission
+  const handleBookingSubmit = async () => {
+    if (!userId || !bookingBillboard || !bookingDates.start || !bookingDates.end) {
+      alert("Please fill in all booking details");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("billboard_bookings")
+        .insert({
+          billboard_id: bookingBillboard.id,
+          user_id: userId,
+          start_date: bookingDates.start,
+          end_date: bookingDates.end,
+          status: "pending",
+        });
+
+      if (error) {
+        console.warn("[billboards] booking submit err", error);
+        alert("Failed to submit booking. Please try again.");
+        return;
+      }
+
+      alert("Booking request submitted! You will be contacted shortly.");
+      setBookingModal(false);
+      setBookingDates({ start: "", end: "" });
+      setBookingBillboard(null);
+      
+      // Refresh bookings if on that tab
+      if (activeTab === "bookings") {
+        fetchBookings();
+      }
+    } catch (err) {
+      console.warn("[billboards] booking submit exception", err);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -253,81 +370,165 @@ export default function BillboardsPage() {
 
           {/* Billboard Grid */}
           {activeTab === "marketplace" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBillboards.map((billboard, index) => (
-                <motion.div
-                  key={billboard.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition cursor-pointer"
-                  onClick={() => setSelectedBillboard(billboard)}
-                >
-                  {/* Image Placeholder */}
-                  <div className="aspect-video bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center relative">
-                    <FaBullhorn size={32} className="text-white/20" />
-                    {!billboard.available && (
-                      <div className="absolute top-3 right-3 bg-red-500/80 text-white text-xs px-2 py-1 rounded-full">
-                        Booked
+            <>
+              {billboardsLoading ? (
+                <div className="flex justify-center py-20">
+                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                </div>
+              ) : filteredBillboards.length === 0 ? (
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+                  <FaBullhorn size={48} className="text-white/20 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Billboards Found</h3>
+                  <p className="text-white/60">
+                    {selectedRegion === "All Regions"
+                      ? "No billboards available at the moment"
+                      : `No billboards available in ${selectedRegion}`}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredBillboards.map((billboard, index) => (
+                    <motion.div
+                      key={billboard.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition cursor-pointer"
+                      onClick={() => setSelectedBillboard(billboard)}
+                    >
+                      {/* Image */}
+                      <div className="aspect-video bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center relative overflow-hidden">
+                        {billboard.image_url ? (
+                          <img
+                            src={billboard.image_url}
+                            alt={billboard.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : (
+                          <FaBullhorn size={32} className="text-white/20" />
+                        )}
+                        {billboard.is_available === false ? (
+                          <div className="absolute top-3 right-3 bg-red-500/80 text-white text-xs px-2 py-1 rounded-full">
+                            Booked
+                          </div>
+                        ) : (
+                          <div className="absolute top-3 right-3 bg-green-500/80 text-white text-xs px-2 py-1 rounded-full">
+                            Available
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {billboard.available && (
-                      <div className="absolute top-3 right-3 bg-green-500/80 text-white text-xs px-2 py-1 rounded-full">
-                        Available
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Details */}
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-1">{billboard.name}</h3>
-                    <div className="flex items-center gap-1 text-white/60 text-sm mb-3">
-                      <FaMapMarkerAlt size={12} />
-                      <span>{billboard.location}</span>
-                    </div>
+                      {/* Details */}
+                      <div className="p-4">
+                        <h3 className="font-semibold mb-1">{billboard.name}</h3>
+                        {billboard.location && (
+                          <div className="flex items-center gap-1 text-white/60 text-sm mb-3">
+                            <FaMapMarkerAlt size={12} />
+                            <span>{billboard.location}</span>
+                          </div>
+                        )}
 
-                    <div className="flex items-center justify-between text-sm mb-3">
-                      <span className="text-white/60">Size: {billboard.size}</span>
-                      <div className="flex items-center gap-1">
-                        <FaStar size={12} style={{ color: VELT_ACCENT }} />
-                        <span>{billboard.rating}</span>
-                      </div>
-                    </div>
+                        <div className="flex items-center justify-between text-sm mb-3">
+                          {billboard.size && (
+                            <span className="text-white/60">Size: {billboard.size}</span>
+                          )}
+                          {billboard.region && (
+                            <span className="text-white/40 text-xs">{billboard.region}</span>
+                          )}
+                        </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold" style={{ color: VELT_ACCENT }}>
-                          {formatCurrency(billboard.pricePerDay)}
-                        </p>
-                        <p className="text-xs text-white/40">per day</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            {billboard.price_per_day != null && (
+                              <>
+                                <p className="font-bold" style={{ color: VELT_ACCENT }}>
+                                  {formatCurrency(billboard.price_per_day)}
+                                </p>
+                                <p className="text-xs text-white/40">per day</p>
+                              </>
+                            )}
+                          </div>
+                          {billboard.daily_impressions != null && (
+                            <div className="flex items-center gap-1 text-white/60 text-sm">
+                              <FaEye size={12} />
+                              <span>{(billboard.daily_impressions / 1000).toFixed(0)}K views/day</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 text-white/60 text-sm">
-                        <FaEye size={12} />
-                        <span>{(billboard.impressions / 1000).toFixed(0)}K views/day</span>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {/* Bookings Tab */}
           {activeTab === "bookings" && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-              <FaCalendar size={48} className="text-white/20 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Bookings Yet</h3>
-              <p className="text-white/60 mb-6">
-                Browse the marketplace and book your first billboard
-              </p>
-              <button
-                onClick={() => setActiveTab("marketplace")}
-                className="px-6 py-3 rounded-xl font-semibold transition hover:opacity-90"
-                style={{ backgroundColor: VELT_ACCENT, color: "#000" }}
-              >
-                Browse Billboards
-              </button>
-            </div>
+            <>
+              {bookingsLoading ? (
+                <div className="flex justify-center py-20">
+                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                </div>
+              ) : bookings.length === 0 ? (
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
+                  <FaCalendar size={48} className="text-white/20 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Bookings Yet</h3>
+                  <p className="text-white/60 mb-6">
+                    Browse the marketplace and book your first billboard
+                  </p>
+                  <button
+                    onClick={() => setActiveTab("marketplace")}
+                    className="px-6 py-3 rounded-xl font-semibold transition hover:opacity-90"
+                    style={{ backgroundColor: VELT_ACCENT, color: "#000" }}
+                  >
+                    Browse Billboards
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bookings.map((booking) => (
+                    <div
+                      key={booking.id}
+                      className="bg-white/5 border border-white/10 rounded-2xl p-6"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold">
+                          {booking.billboard?.name || "Billboard Booking"}
+                        </h3>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            booking.status === "confirmed"
+                              ? "bg-green-500/20 text-green-400"
+                              : booking.status === "pending"
+                              ? "bg-yellow-500/20 text-yellow-400"
+                              : "bg-red-500/20 text-red-400"
+                          }`}
+                        >
+                          {booking.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-white/60">Start Date</p>
+                          <p>{new Date(booking.start_date).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/60">End Date</p>
+                          <p>{new Date(booking.end_date).toLocaleDateString()}</p>
+                        </div>
+                        {booking.billboard?.location && (
+                          <div className="col-span-2">
+                            <p className="text-white/60">Location</p>
+                            <p>{booking.billboard.location}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
@@ -354,51 +555,61 @@ export default function BillboardsPage() {
             {/* Content */}
             <div className="p-6">
               {/* Image */}
-              <div className="aspect-video bg-gradient-to-br from-white/10 to-white/5 rounded-xl flex items-center justify-center mb-6">
-                <FaBullhorn size={48} className="text-white/20" />
+              <div className="aspect-video bg-gradient-to-br from-white/10 to-white/5 rounded-xl flex items-center justify-center mb-6 overflow-hidden">
+                {selectedBillboard.image_url ? (
+                  <img
+                    src={selectedBillboard.image_url}
+                    alt={selectedBillboard.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FaBullhorn size={48} className="text-white/20" />
+                )}
               </div>
 
               {/* Info Grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-white/5 rounded-xl p-4">
                   <p className="text-white/60 text-sm mb-1">Location</p>
-                  <p className="font-medium">{selectedBillboard.location}</p>
+                  <p className="font-medium">{selectedBillboard.location || "Not specified"}</p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
                   <p className="text-white/60 text-sm mb-1">Region</p>
-                  <p className="font-medium">{selectedBillboard.region}</p>
+                  <p className="font-medium">{selectedBillboard.region || "Not specified"}</p>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <p className="text-white/60 text-sm mb-1">Size</p>
-                  <p className="font-medium">{selectedBillboard.size}</p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <p className="text-white/60 text-sm mb-1">Daily Impressions</p>
-                  <p className="font-medium">{selectedBillboard.impressions.toLocaleString()}</p>
-                </div>
+                {selectedBillboard.size && (
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-white/60 text-sm mb-1">Size</p>
+                    <p className="font-medium">{selectedBillboard.size}</p>
+                  </div>
+                )}
+                {selectedBillboard.daily_impressions != null && (
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-white/60 text-sm mb-1">Daily Impressions</p>
+                    <p className="font-medium">{selectedBillboard.daily_impressions.toLocaleString()}</p>
+                  </div>
+                )}
               </div>
 
               {/* Price */}
-              <div className="bg-white/5 rounded-xl p-6 mb-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-white/60 text-sm mb-1">Price per day</p>
-                    <p className="text-2xl font-bold" style={{ color: VELT_ACCENT }}>
-                      {formatCurrency(selectedBillboard.pricePerDay)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FaStar style={{ color: VELT_ACCENT }} />
-                    <span className="font-semibold">{selectedBillboard.rating}</span>
-                    <span className="text-white/40">rating</span>
+              {selectedBillboard.price_per_day != null && (
+                <div className="bg-white/5 rounded-xl p-6 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white/60 text-sm mb-1">Price per day</p>
+                      <p className="text-2xl font-bold" style={{ color: VELT_ACCENT }}>
+                        {formatCurrency(selectedBillboard.price_per_day)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Book Button */}
-              {selectedBillboard.available ? (
+              {selectedBillboard.is_available !== false ? (
                 <button
                   onClick={() => {
+                    setBookingBillboard(selectedBillboard);
                     setSelectedBillboard(null);
                     setBookingModal(true);
                   }}
@@ -419,7 +630,7 @@ export default function BillboardsPage() {
       )}
 
       {/* Booking Modal */}
-      {bookingModal && (
+      {bookingModal && bookingBillboard && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -427,9 +638,15 @@ export default function BillboardsPage() {
             className="bg-gray-900 border border-white/10 rounded-2xl max-w-md w-full"
           >
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
-              <h2 className="text-xl font-bold">Book Billboard</h2>
+              <div>
+                <h2 className="text-xl font-bold">Book Billboard</h2>
+                <p className="text-white/60 text-sm">{bookingBillboard.name}</p>
+              </div>
               <button
-                onClick={() => setBookingModal(false)}
+                onClick={() => {
+                  setBookingModal(false);
+                  setBookingBillboard(null);
+                }}
                 className="text-white/60 hover:text-white transition"
               >
                 <FaTimes size={20} />
@@ -455,14 +672,12 @@ export default function BillboardsPage() {
                 />
               </div>
               <button
-                onClick={() => {
-                  alert("Booking request submitted! You will be contacted shortly.");
-                  setBookingModal(false);
-                }}
-                className="w-full py-4 rounded-xl font-semibold transition hover:opacity-90"
+                onClick={handleBookingSubmit}
+                disabled={submitting}
+                className="w-full py-4 rounded-xl font-semibold transition hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: VELT_ACCENT, color: "#000" }}
               >
-                Submit Booking Request
+                {submitting ? "Submitting..." : "Submit Booking Request"}
               </button>
             </div>
           </motion.div>
