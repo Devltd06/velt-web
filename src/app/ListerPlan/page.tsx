@@ -161,7 +161,7 @@ export default function ListerPlanPage(): JSX.Element {
       (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named = function () {
         console.log("Paystack checkout closed (global onclose)");
       };
-      window.onClose = (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named;
+      (window as any).onClose = (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named;
     }
   };
 
@@ -187,7 +187,7 @@ export default function ListerPlanPage(): JSX.Element {
       }
 
       // Setup using the global named functions (not inline)
-      const handler = window.PaystackPop.setup({
+      const handler = (window.PaystackPop as any).setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: profile?.email ?? "",
         amount: amountInPesewas,

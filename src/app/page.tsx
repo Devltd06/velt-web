@@ -14,14 +14,38 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
               <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
-                Your Content. On Billboards. Everywhere.
+                 CREATE, UPLOAD AND MONETIZE.
               </h1>
               <p className="text-lg text-gray-600 mb-8">
-                Upload your content and get it displayed on billboards across the country.
+               Velt helps creators monetize their work and manage subscriptions with ease. Connect with your audience and grow your brand with our billboard ecosystem.
               </p>
               
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-                <WaitlistForm showName={false} text="Sign Up on Waitlist" />
+              {/* Login/Signup Buttons */}
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                transition={{ delay: 0.2 }}
+                className="flex flex-col sm:flex-row gap-4 mb-6"
+              >
+                <Link 
+                  href="/app/login" 
+                  className="px-8 py-4 rounded-lg font-semibold text-center transition-all duration-300 hover:scale-105"
+                  style={{ backgroundColor: "#D4AF37", color: "#000" }}
+                >
+                  Log In
+                </Link>
+                <Link 
+                  href="/app/signup" 
+                  className="px-8 py-4 rounded-lg font-semibold text-center border-2 transition-all duration-300 hover:scale-105"
+                  style={{ borderColor: "#D4AF37", color: "#D4AF37" }}
+                >
+                  Sign Up
+                </Link>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+                <p className="text-sm text-gray-500 mb-2">Or join our waitlist for early access:</p>
+                <WaitlistForm showName={false} text="Join Waitlist" />
               </motion.div>
 
               <div className="mt-10 flex gap-6">
