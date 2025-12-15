@@ -78,8 +78,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true, invoice, subscription: sub ?? null });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("markPaid unexpected error", err);
-    return NextResponse.json({ error: String(err?.message ?? err) }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
