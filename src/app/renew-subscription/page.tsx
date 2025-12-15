@@ -8,12 +8,19 @@ import Link from "next/link";
 
 const GOLD = "#D4AF37";
 
-// Subscription plans
-const plans = [
-  { id: "pro", name: "Pro Plan", priceNGN: 4000, priceUSD: 2.5, features: ["Unlimited uploads", "Analytics dashboard", "Priority support"] },
-  { id: "celebrity", name: "Celebrity Plan", priceNGN: 5600, priceUSD: 3.5, features: ["Everything in Pro", "Verified badge", "Custom branding"] },
-  { id: "channel", name: "Channel Plan", priceNGN: 4800, priceUSD: 3.0, features: ["Multi-user access", "Team analytics", "API access"] },
-];
+// Single Premium Plan
+const PREMIUM_PLAN = {
+  id: "premium",
+  name: "Premium Plan",
+  priceGHS: 25,
+  features: [
+    "Unlimited uploads",
+    "Analytics dashboard",
+    "Priority support",
+    "Verified badge",
+    "All premium features"
+  ]
+};
 
 type Step = "signin" | "welcome" | "active" | "select" | "payment" | "success";
 
@@ -35,7 +42,7 @@ export default function RenewSubscriptionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<typeof PREMIUM_PLAN | null>(null);
   const [daysRemaining, setDaysRemaining] = useState(0);
   const [subscriptionExpired, setSubscriptionExpired] = useState(true);
 
@@ -56,6 +63,7 @@ export default function RenewSubscriptionPage() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function loadUserProfile(userId: string, userEmail: string, isAutoLogin: boolean = false) {
     try {
       const { data: profile } = await supabase
@@ -81,22 +89,27 @@ export default function RenewSubscriptionPage() {
         if (profile.subscription_expires_at) {
           const expiresAt = new Date(profile.subscription_expires_at);
           const now = new Date();
-          const diffTime = expiresAt.getTime() - now.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
           
-          if (diffDays > 0) {
+          // Debug logging
+          console.log("Subscription check:", {
+            expires_at_raw: profile.subscription_expires_at,
+            expires_at_parsed: expiresAt.toISOString(),
+            now: now.toISOString(),
+            isActive: expiresAt > now
+          });
+          
+          // Direct date comparison (more reliable than diff calculation)
+          if (expiresAt > now) {
             // Subscription is still active
+            const diffTime = expiresAt.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             setDaysRemaining(diffDays);
             setSubscriptionExpired(false);
             setStep("active");
           } else {
             // Subscription expired - show welcome then select
             setSubscriptionExpired(true);
-            if (isAutoLogin) {
-              setStep("welcome");
-            } else {
-              setStep("welcome");
-            }
+            setStep("welcome");
           }
         } else {
           // No subscription - show welcome then select
@@ -139,7 +152,7 @@ export default function RenewSubscriptionPage() {
     setStep("select");
   }
 
-  function handleSelectPlan(plan: typeof plans[0]) {
+  function handleSelectPlan(plan: typeof PREMIUM_PLAN) {
     setSelectedPlan(plan);
     setStep("payment");
   }
@@ -166,8 +179,8 @@ export default function RenewSubscriptionPage() {
         }) => { openIframe: () => void } } }).PaystackPop.setup({
           key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_xxxxx",
           email: user.email,
-          amount: selectedPlan.priceNGN * 100, // Amount in kobo
-          currency: "NGN",
+          amount: selectedPlan.priceGHS * 100, // Amount in pesewas (GHS)
+          currency: "GHS",
           ref: `renew_${user.id}_${Date.now()}`,
           onClose: () => {
             setLoading(false);
@@ -433,8 +446,13 @@ export default function RenewSubscriptionPage() {
                   </div>
                   <p className="text-green-600 mt-2">
                     You have <span className="font-bold text-lg">{daysRemaining} days</span> remaining on your{" "}
-                    <span className="font-semibold capitalize">{user.subscription_plan || "current"}</span> plan.
+                    <span className="font-semibold capitalize">{user.subscription_plan || "Premium"}</span> plan.
                   </p>
+                  {user.subscription_expires_at && (
+                    <p className="text-green-500 text-sm mt-2">
+                      Expires on: <span className="font-semibold">{new Date(user.subscription_expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
@@ -473,7 +491,7 @@ export default function RenewSubscriptionPage() {
             </motion.div>
           )}
 
-          {/* STEP 3: Select Plan */}
+          {/* STEP 3: Select Plan - Premium Only */}
           {step === "select" && (
             <motion.div
               key="select"
@@ -483,46 +501,44 @@ export default function RenewSubscriptionPage() {
               className="bg-white rounded-2xl shadow-xl p-8"
             >
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Select Your Plan</h2>
-                <p className="text-gray-600 mt-2">Choose a plan to renew your subscription</p>
+                <FaCrown className="text-4xl mx-auto mb-3" style={{ color: GOLD }} />
+                <h2 className="text-2xl font-bold text-gray-900">VELT Premium</h2>
+                <p className="text-gray-600 mt-2">Unlock all features with our Premium plan</p>
               </div>
 
-              <div className="space-y-4">
-                {plans.map((plan) => (
-                  <motion.button
-                    key={plan.id}
-                    onClick={() => handleSelectPlan(plan)}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all hover:shadow-lg ${
-                      user?.subscription_plan === plan.id ? "border-green-500 bg-green-50" : "border-gray-200 hover:border-amber-300"
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-gray-900">{plan.name}</h3>
-                          {user?.subscription_plan === plan.id && (
-                            <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">Current</span>
-                          )}
-                        </div>
-                        <ul className="mt-2 space-y-1">
-                          {plan.features.map((feature) => (
-                            <li key={feature} className="text-sm text-gray-600 flex items-center gap-2">
-                              <FaCheckCircle className="text-green-500 text-xs" />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold" style={{ color: GOLD }}>₦{plan.priceNGN.toLocaleString()}</div>
-                        <div className="text-xs text-gray-500">${plan.priceUSD}/mo</div>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
+              <motion.div
+                className="p-6 rounded-xl border-2 transition-all"
+                style={{ borderColor: GOLD, backgroundColor: `${GOLD}10` }}
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+              >
+                <div className="text-center mb-4">
+                  <div className="text-4xl font-bold" style={{ color: GOLD }}>GH₵{PREMIUM_PLAN.priceGHS}</div>
+                  <div className="text-gray-500 text-sm">per month</div>
+                </div>
+
+                <ul className="space-y-3 mb-6">
+                  {PREMIUM_PLAN.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-3 text-gray-700">
+                      <FaCheckCircle className="text-green-500 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => handleSelectPlan(PREMIUM_PLAN)}
+                  className="w-full py-3 rounded-lg font-semibold text-black transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                  style={{ backgroundColor: GOLD }}
+                >
+                  Continue to Payment
+                  <FaArrowRight />
+                </button>
+              </motion.div>
+
+              <p className="text-center text-gray-400 text-xs mt-4">
+                Your subscription will be renewed for 1 month
+              </p>
             </motion.div>
           )}
 
@@ -557,7 +573,7 @@ export default function RenewSubscriptionPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-900 font-bold">Total</span>
                     <span className="text-2xl font-bold" style={{ color: GOLD }}>
-                      ₦{selectedPlan.priceNGN.toLocaleString()}
+                      GH₵{selectedPlan.priceGHS}
                     </span>
                   </div>
                 </div>

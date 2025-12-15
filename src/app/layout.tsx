@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-white text-black font-sans">
+      <body className="bg-[var(--background)] text-[var(--foreground)] font-sans min-h-screen">
         {/* Header / Navbar */}
         <Header />
 
@@ -23,7 +23,7 @@ export default function RootLayout({
         <main>{children}</main>
 
         {/* ✅ Footer */}
-        <footer className="w-full border-t border-gray-200 bg-white mt-12">
+        <footer className="w-full border-t border-gray-200 bg-[var(--background)] mt-12">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 text-sm text-gray-700 flex flex-col md:flex-row justify-between gap-4">
             <p>© {new Date().getFullYear()} VELT. All rights reserved.</p>
             <div className="flex gap-6">

@@ -12,13 +12,13 @@ function ComingSoonModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl"
+        className="bg-[var(--background)] rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl border border-gray-200"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "#D4AF37" }}>
           <span className="text-3xl">🚀</span>
         </div>
-        <h2 className="text-2xl font-bold text-black mb-2">Coming Soon!</h2>
+        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">Coming Soon!</h2>
         <p className="text-gray-600 mb-6">
           VELT for Web is currently under development. We&apos;re working hard to bring you an amazing experience. Stay tuned!
         </p>
@@ -53,15 +53,15 @@ export default function Header() {
       <ComingSoonModal isOpen={showComingSoon} onClose={() => setShowComingSoon(false)} />
       
       {/* Header / Navbar */}
-      <header className="w-full border-b border-gray-200 bg-white sticky top-0 z-50">
+      <header className="w-full border-b border-gray-200 bg-[var(--background)] sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="text-xl font-bold text-black">
+          <Link href="/" className="text-xl font-bold text-[var(--foreground)]">
             VELT
           </Link>
 
           {/* Navigation */}
-          <div className="flex items-center gap-6 text-sm text-black">
+          <div className="flex items-center gap-6 text-sm text-[var(--foreground)]">
             <Link href="/" className="hover:opacity-70 transition hidden md:block">Home</Link>
             <Link href="/investors" className="hover:opacity-70 transition hidden md:block">investor boardview</Link>
             <Link href="/ListerPlan" className="hover:opacity-70 transition hidden md:block">Renew subscription</Link>

@@ -69,7 +69,7 @@ const Sparkle = ({ x, y, delay }: { x: string; y: string; delay: number }) => (
 
 export default function Home() {
   return (
-    <div className="min-h-screen w-full bg-white text-black antialiased overflow-hidden">
+    <div className="min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] antialiased overflow-hidden">
       {/* HERO with animated background */}
       <header className="w-full border-b border-gray-200 relative">
         {/* Animated Background Elements */}
@@ -253,7 +253,7 @@ export default function Home() {
       {/* FEATURES */}
       <section className="w-full bg-gray-50 border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 md:px-12 py-20">
-          <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-bold text-black text-center mb-4">
+          <motion.h2 initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-bold text-[var(--foreground)] text-center mb-4">
             How It Works
           </motion.h2>
           <p className="text-center text-gray-600 max-w-2xl mx-auto mb-12">Upload your content to billboards across the country in minutes.</p>
@@ -261,19 +261,19 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0 }} className="p-8 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
               <div className="text-4xl mb-4" style={{ color: "#d4af37" }}>1</div>
-              <h3 className="text-xl font-bold text-black mb-3">Upload Content</h3>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-3">Upload Content</h3>
               <p className="text-gray-600 text-sm">Add your content and select billboard locations.</p>
             </motion.div>
 
             <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="p-8 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
               <div className="text-4xl mb-4" style={{ color: "#d4af37" }}>2</div>
-              <h3 className="text-xl font-bold text-black mb-3">Display & Manage</h3>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-3">Display & Manage</h3>
               <p className="text-gray-600 text-sm">View live status and analytics from your dashboard.</p>
             </motion.div>
 
             <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="p-8 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition">
               <div className="text-4xl mb-4" style={{ color: "#d4af37" }}>3</div>
-              <h3 className="text-xl font-bold text-black mb-3">Reach Audiences</h3>
+              <h3 className="text-xl font-bold text-[var(--foreground)] mb-3">Reach Audiences</h3>
               <p className="text-gray-600 text-sm">Get your message in front of people everywhere.</p>
             </motion.div>
           </div>
@@ -281,18 +281,18 @@ export default function Home() {
       </section>
 
       {/* FEATURES HIGHLIGHT */}
-      <section className="w-full bg-white">
+      <section className="w-full bg-[var(--background)]">
         <div className="max-w-6xl mx-auto px-6 md:px-12 py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-              <h2 className="text-3xl font-bold text-black mb-6">Powerful Features</h2>
+              <h2 className="text-3xl font-bold text-[var(--foreground)] mb-6">Powerful Features</h2>
               <div className="space-y-4">
                 <div className="flex gap-4 items-start">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#faf5f0", color: "#d4af37" }}>
                     <FaImage />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-black">Billboard Management</h4>
+                    <h4 className="font-semibold text-[var(--foreground)]">Billboard Management</h4>
                     <p className="text-sm text-gray-600">Manage all your billboards from one dashboard.</p>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export default function Home() {
                     <FaChartLine />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-black">Real-time Analytics</h4>
+                    <h4 className="font-semibold text-[var(--foreground)]">Real-time Analytics</h4>
                     <p className="text-sm text-gray-600">Track impressions and engagement instantly.</p>
                   </div>
                 </div>
@@ -310,7 +310,7 @@ export default function Home() {
                     <FaGlobe />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-black">Nationwide Coverage</h4>
+                    <h4 className="font-semibold text-[var(--foreground)]">Nationwide Coverage</h4>
                     <p className="text-sm text-gray-600">Access billboards across all regions.</p>
                   </div>
                 </div>

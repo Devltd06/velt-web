@@ -1,165 +1,371 @@
 "use client";
 
 import Link from "next/link";
-import { FaArrowLeft, FaChartLine, FaTrophy } from "react-icons/fa";
+import { FaArrowLeft, FaChartLine, FaTrophy, FaUsers, FaGlobe, FaRocket, FaShieldAlt, FaHandshake, FaEnvelope } from "react-icons/fa";
 import { motion } from "framer-motion";
+
+const GOLD = "#D4AF37";
+
+// Animated counter component
+const AnimatedNumber = ({ value, prefix = "", suffix = "" }: { value: string; prefix?: string; suffix?: string }) => (
+  <motion.span
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    {prefix}{value}{suffix}
+  </motion.span>
+);
+
+// Floating background element
+const FloatingOrb = ({ className, delay }: { className: string; delay: number }) => (
+  <motion.div
+    className={`absolute rounded-full blur-3xl ${className}`}
+    animate={{
+      scale: [1, 1.2, 1],
+      opacity: [0.1, 0.2, 0.1],
+    }}
+    transition={{
+      duration: 8,
+      delay,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  />
+);
 
 export default function Investors() {
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <FloatingOrb className="w-96 h-96 -top-48 -right-48 bg-amber-200/30" delay={0} />
+        <FloatingOrb className="w-80 h-80 top-1/2 -left-40 bg-amber-100/20" delay={2} />
+        <FloatingOrb className="w-64 h-64 bottom-20 right-1/4 bg-yellow-200/20" delay={4} />
+      </div>
+
       {/* HEADER */}
-      <header className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-black transition">
-            <FaArrowLeft size={16} />
-            <span className="text-sm">Back Home</span>
+      <header className="border-b border-gray-200 bg-[var(--background)]/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-[var(--foreground)] transition">
+            <FaArrowLeft size={14} />
+            <span className="text-sm font-medium">Back Home</span>
           </Link>
-          <div className="font-bold text-xl">VELT</div>
+          <Link href="/" className="font-bold text-xl">VELT</Link>
           <div className="w-20"></div>
         </div>
       </header>
 
-      {/* HERO */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-20">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Investor Dashboard</h1>
-          <p className="text-lg text-gray-600 mb-12">Key metrics and performance indicators for VELT.</p>
-        </motion.div>
-
-        {/* MAIN METRICS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2" style={{ borderColor: "#d4af37" }}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-gray-600 text-sm font-semibold">Monthly Revenue</div>
-                <div className="text-4xl font-bold mt-2">GHS 2.4M</div>
-              </div>
-              <FaChartLine className="text-4xl" style={{ color: "#d4af37" }} />
-            </div>
-            <div className="text-xs text-gray-600">Growing at 24% month-over-month</div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-8 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2" style={{ borderColor: "#d4af37" }}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-gray-600 text-sm font-semibold">Net Profit</div>
-                <div className="text-4xl font-bold mt-2">GHS 840K</div>
-              </div>
-              <FaTrophy className="text-4xl" style={{ color: "#d4af37" }} />
-            </div>
-            <div className="text-xs text-gray-600">35% profit margin</div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-8 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2" style={{ borderColor: "#d4af37" }}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-gray-600 text-sm font-semibold">Company Valuation</div>
-                <div className="text-4xl font-bold mt-2">GHS 180M</div>
-              </div>
-              <div className="text-4xl" style={{ color: "#d4af37" }}>📈</div>
-            </div>
-            <div className="text-xs text-gray-600">Based on latest funding round</div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="p-8 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl border-2" style={{ borderColor: "#d4af37" }}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-gray-600 text-sm font-semibold">Active Billboards</div>
-                <div className="text-4xl font-bold mt-2">450+</div>
-              </div>
-              <div className="text-4xl" style={{ color: "#d4af37" }}>📊</div>
-            </div>
-            <div className="text-xs text-gray-600">Nationwide coverage</div>
-          </motion.div>
-        </div>
-
-        {/* DETAILED METRICS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-          {/* FINANCIAL OVERVIEW */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="p-8 bg-gray-50 rounded-xl border border-gray-200">
-            <h3 className="text-2xl font-bold mb-6">Financial Overview</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-                <span className="text-gray-700">Total Revenue (YTD)</span>
-                <span className="font-bold text-lg">GHS 18.2M</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-                <span className="text-gray-700">Operating Expenses</span>
-                <span className="font-bold text-lg">GHS 8.8M</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-                <span className="text-gray-700">EBITDA</span>
-                <span className="font-bold text-lg" style={{ color: "#d4af37" }}>GHS 9.4M</span>
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-gray-700 font-semibold">Cash Runway</span>
-                <span className="font-bold text-lg">18+ months</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* GROWTH METRICS */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }} className="p-8 bg-gray-50 rounded-xl border border-gray-200">
-            <h3 className="text-2xl font-bold mb-6">Growth Metrics</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-                <span className="text-gray-700">User Growth (Monthly)</span>
-                <span className="font-bold text-lg">+18%</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-                <span className="text-gray-700">Billboard Expansion</span>
-                <span className="font-bold text-lg">+25 per month</span>
-              </div>
-              <div className="flex justify-between items-center pb-4 border-b border-gray-300">
-                <span className="text-gray-700">Customer Retention</span>
-                <span className="font-bold text-lg">92%</span>
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-gray-700 font-semibold">Market Penetration</span>
-                <span className="font-bold text-lg">8% of market</span>
-              </div>
+      {/* HERO SECTION */}
+      <section className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-20 md:py-28">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.7 }}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 mb-6"
+            >
+              <FaChartLine style={{ color: GOLD }} />
+              <span className="text-sm font-medium text-amber-800">Investor Relations</span>
+            </motion.div>
+            
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Invest in the Future of{" "}
+              <span style={{ color: GOLD }}>Creator Economy</span>
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
+              VELT is revolutionizing how creators monetize their content and how brands connect with audiences through innovative billboard technology.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.a
+                href="mailto:investors@velt.app"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 rounded-xl font-semibold text-black flex items-center justify-center gap-2"
+                style={{ backgroundColor: GOLD }}
+              >
+                <FaEnvelope />
+                Contact Investor Relations
+              </motion.a>
+              <motion.a
+                href="#metrics"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 rounded-xl font-semibold border-2 border-gray-300 hover:border-amber-400 transition"
+              >
+                View Metrics
+              </motion.a>
             </div>
           </motion.div>
         </div>
+      </section>
 
-        {/* FUTURE PROJECTIONS */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="p-8 bg-gradient-to-r from-gray-900 to-black text-white rounded-xl">
-          <h3 className="text-2xl font-bold mb-6">12-Month Projections</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <div className="text-gray-300 text-sm font-semibold mb-2">Projected Revenue</div>
-              <div className="text-3xl font-bold mb-2">GHS 32.4M</div>
-              <div className="text-xs text-gray-400">+78% growth</div>
-            </div>
-            <div>
-              <div className="text-gray-300 text-sm font-semibold mb-2">Projected Profit</div>
-              <div className="text-3xl font-bold mb-2">GHS 14.7M</div>
-              <div className="text-xs text-gray-400">45% margin</div>
-            </div>
-            <div>
-              <div className="text-gray-300 text-sm font-semibold mb-2">Projected Valuation</div>
-              <div className="text-3xl font-bold mb-2">GHS 320M</div>
-              <div className="text-xs text-gray-400">+78% increase</div>
-            </div>
+      {/* KEY METRICS */}
+      <section id="metrics" className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            whileInView={{ opacity: 1 }} 
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Key Performance Metrics</h2>
+            <p className="text-gray-600">Real-time business performance indicators</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: FaChartLine, label: "Monthly Revenue", value: "GH₵2.4M", change: "+24%", color: "from-blue-500 to-blue-600" },
+              { icon: FaTrophy, label: "Net Profit", value: "GH₵840K", change: "+35%", color: "from-green-500 to-green-600" },
+              { icon: FaRocket, label: "Company Valuation", value: "GH₵180M", change: "+78%", color: "from-purple-500 to-purple-600" },
+              { icon: FaGlobe, label: "Active Billboards", value: "450+", change: "+25/mo", color: "from-amber-500 to-amber-600" },
+            ].map((metric, index) => (
+              <motion.div
+                key={metric.label}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-lg"
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mb-4`}>
+                  <metric.icon className="text-white text-xl" />
+                </div>
+                <p className="text-gray-500 text-sm font-medium mb-1">{metric.label}</p>
+                <p className="text-3xl font-bold mb-2">{metric.value}</p>
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                  {metric.change}
+                </span>
+              </motion.div>
+            ))}
           </div>
-        </motion.div>
-
-        {/* CONTACT SECTION */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mt-12 p-8 bg-gray-50 rounded-xl border border-gray-200">
-          <h3 className="text-2xl font-bold mb-4">Investor Relations</h3>
-          <p className="text-gray-600 mb-6">For detailed financial reports, pitch decks, and partnership opportunities, please reach out.</p>
-          <a href="mailto:investors@velt.app" className="font-semibold hover:opacity-80 transition" style={{ color: "#d4af37" }}>
-            investors@velt.app
-          </a>
-        </motion.div>
-      </div>
-
-      {/* FOOTER */}
-      <footer className="w-full border-t border-gray-200 mt-20">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 py-8 text-sm text-gray-600 text-center">
-          <p>© {new Date().getFullYear()} VELT. All rights reserved.</p>
         </div>
-      </footer>
+      </section>
+
+      {/* FINANCIAL DETAILS */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Financial Overview */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${GOLD}20` }}>
+                  <FaChartLine style={{ color: GOLD }} />
+                </div>
+                <h3 className="text-2xl font-bold">Financial Overview</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  { label: "Total Revenue (YTD)", value: "GH₵18.2M" },
+                  { label: "Operating Expenses", value: "GH₵8.8M" },
+                  { label: "EBITDA", value: "GH₵9.4M", highlight: true },
+                  { label: "Cash Runway", value: "18+ months" },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
+                  >
+                    <span className="text-gray-600">{item.label}</span>
+                    <span className={`font-bold text-lg ${item.highlight ? "" : ""}`} style={item.highlight ? { color: GOLD } : {}}>
+                      {item.value}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Growth Metrics */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${GOLD}20` }}>
+                  <FaRocket style={{ color: GOLD }} />
+                </div>
+                <h3 className="text-2xl font-bold">Growth Metrics</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  { label: "User Growth (Monthly)", value: "+18%" },
+                  { label: "Billboard Expansion", value: "+25/month" },
+                  { label: "Customer Retention", value: "92%" },
+                  { label: "Market Penetration", value: "8% of market" },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0"
+                  >
+                    <span className="text-gray-600">{item.label}</span>
+                    <span className="font-bold text-lg">{item.value}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* PROJECTIONS */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-3xl p-8 md:p-12 text-white overflow-hidden relative"
+          >
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl" />
+            
+            <div className="relative z-10">
+              <div className="text-center mb-10">
+                <h3 className="text-3xl md:text-4xl font-bold mb-3">12-Month Projections</h3>
+                <p className="text-gray-400">Based on current growth trajectory</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  { label: "Projected Revenue", value: "GH₵32.4M", growth: "+78%" },
+                  { label: "Projected Profit", value: "GH₵14.7M", growth: "45% margin" },
+                  { label: "Projected Valuation", value: "GH₵320M", growth: "+78%" },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.15 }}
+                    className="text-center"
+                  >
+                    <p className="text-gray-400 text-sm font-medium mb-2">{item.label}</p>
+                    <p className="text-4xl md:text-5xl font-bold mb-2" style={{ color: GOLD }}>{item.value}</p>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-amber-300">
+                      {item.growth}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* WHY INVEST */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            whileInView={{ opacity: 1 }} 
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Invest in VELT?</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Strategic advantages that set us apart in the market</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: FaUsers, title: "Growing Market", description: "The creator economy is projected to reach $500B by 2027. VELT is positioned to capture significant market share." },
+              { icon: FaShieldAlt, title: "Strong Moat", description: "Proprietary technology, exclusive billboard partnerships, and network effects create sustainable competitive advantages." },
+              { icon: FaHandshake, title: "Experienced Team", description: "Leadership team with proven track records in tech, advertising, and scaling startups across Africa." },
+            ].map((item, index) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg text-center"
+              >
+                <div 
+                  className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center"
+                  style={{ backgroundColor: `${GOLD}15` }}
+                >
+                  <item.icon className="text-2xl" style={{ color: GOLD }} />
+                </div>
+                <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT CTA */}
+      <section className="py-20">
+        <div className="max-w-4xl mx-auto px-6 md:px-12">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-3xl p-8 md:p-12 border border-gray-100 shadow-xl text-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring" }}
+              className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+              style={{ backgroundColor: `${GOLD}20` }}
+            >
+              <FaHandshake className="text-3xl" style={{ color: GOLD }} />
+            </motion.div>
+            
+            <h3 className="text-3xl font-bold mb-4">Ready to Partner?</h3>
+            <p className="text-gray-600 mb-8 max-w-xl mx-auto">
+              For detailed financial reports, pitch decks, and partnership opportunities, our investor relations team is ready to assist you.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <motion.a
+                href="mailto:investors@velt.app"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 rounded-xl font-semibold text-black flex items-center justify-center gap-2"
+                style={{ backgroundColor: GOLD }}
+              >
+                <FaEnvelope />
+                investors@velt.app
+              </motion.a>
+              <motion.a
+                href="tel:+233000000000"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 rounded-xl font-semibold border-2 border-gray-200 hover:border-amber-400 transition"
+              >
+                Schedule a Call
+              </motion.a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
     </div>
   );
 }
