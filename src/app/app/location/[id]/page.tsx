@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 
 const VELT_ACCENT = "#D4AF37";
 
-export default function LocationPostPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function LocationPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [post, setPost] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
