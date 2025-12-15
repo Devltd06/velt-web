@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import PayDebugInner from "components/PayDebugInner";
+import PayDebugInner from "@/components/PayDebugInner";
 
 export default function PayDebugPage() {
   return (

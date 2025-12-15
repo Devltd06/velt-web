@@ -5,10 +5,14 @@ import React, { JSX, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
+interface PaystackHandler {
+  openIframe: () => void;
+}
+
 declare global {
   interface Window {
     PaystackPop?: {
-      setup: (config: Record<string, unknown>) => void;
+      setup: (config: Record<string, unknown>) => PaystackHandler;
       openIframe: () => void;
     };
     __velt_paystack_callback_named?: (resp: Record<string, unknown>) => void;
@@ -155,13 +159,13 @@ export default function ListerPlanPage(): JSX.Element {
         void handlePayCallbackInner(resp);
       };
       // alias for older expectations (some Paystack variants)
-      window.callback = (window as any).__velt_paystack_callback_named;
+      window.callback = (window as unknown as Record<string, unknown>).__velt_paystack_callback_named as (resp: Record<string, unknown>) => void;
     }
     if (typeof window.__velt_paystack_onclose_named !== "function") {
       (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named = function () {
         console.log("Paystack checkout closed (global onclose)");
       };
-      (window as any).onClose = (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named;
+      (window as unknown as Record<string, unknown>).onClose = (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named;
     }
   };
 
@@ -187,7 +191,7 @@ export default function ListerPlanPage(): JSX.Element {
       }
 
       // Setup using the global named functions (not inline)
-      const handler = (window.PaystackPop as any).setup({
+      const handler = window.PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: profile?.email ?? "",
         amount: amountInPesewas,
@@ -208,20 +212,20 @@ export default function ListerPlanPage(): JSX.Element {
           // keep callback for a short while longer, then remove
           setTimeout(() => {
             try {
-              if ((window as any).__velt_paystack_callback_named) {
+              if ((window as unknown as Record<string, unknown>).__velt_paystack_callback_named) {
                 try {
-                  delete (window as any).__velt_paystack_callback_named;
+                  delete (window as unknown as Record<string, unknown>).__velt_paystack_callback_named;
                 } catch {}
               }
-              if ((window as any).__velt_paystack_onclose_named) {
+              if ((window as unknown as Record<string, unknown>).__velt_paystack_onclose_named) {
                 try {
-                  delete (window as any).__velt_paystack_onclose_named;
+                  delete (window as unknown as Record<string, unknown>).__velt_paystack_onclose_named;
                 } catch {}
               }
               // remove aliases
               try {
-                delete (window as any).callback;
-                delete (window as any).onClose;
+                delete (window as unknown as Record<string, unknown>).callback;
+                delete (window as unknown as Record<string, unknown>).onClose;
               } catch {}
             } catch {}
           }, 3000);

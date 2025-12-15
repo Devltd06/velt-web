@@ -39,7 +39,7 @@ export default function Signup() {
           username: params.username,
           full_name: params.full_name ?? null,
           bio: params.bio ?? null,
-          role: "free",
+          role: "Pro Plan",
         },
       ], { onConflict: "id" });
     } catch (e) {
