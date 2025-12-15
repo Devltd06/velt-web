@@ -7,10 +7,18 @@ import { supabase } from "@/lib/supabaseClient";
 
 const VELT_ACCENT = "#D4AF37";
 
+interface LocationPost {
+  id: string;
+  place: string;
+  caption?: string;
+  images?: string[];
+  user_id: string;
+}
+
 export default function LocationPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const [post, setPost] = useState<any | null>(null);
+  const [post, setPost] = useState<LocationPost | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +41,7 @@ export default function LocationPostPage({ params }: { params: Promise<{ id: str
     <div className="min-h-screen bg-black text-white p-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">{post.place}</h1>
-        {post.images?.length > 0 && (
+        {post.images && post.images.length > 0 && (
           <img src={post.images[0]} alt={post.place} className="w-full h-96 object-cover rounded-lg mb-4" />
         )}
         {post.caption && <p className="text-white/80 mb-4">{post.caption}</p>}

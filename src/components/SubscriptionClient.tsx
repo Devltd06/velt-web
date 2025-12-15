@@ -9,12 +9,23 @@ const plans = [
   { name: "Partnership Plan", priceUSD: 2.5 },
 ];
 
+interface UserData {
+  email?: string;
+  username?: string;
+  fullName?: string;
+}
+
+interface Plan {
+  name: string;
+  priceUSD: number;
+}
+
 export default function SubscriptionClient() {
   const router = useRouter();
   const search = useSearchParams();
   const dataParam = search.get("data");
 
-  const [userData, setUserData] = useState<any>({});
+  const [userData, setUserData] = useState<UserData>({});
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [loadingRate, setLoadingRate] = useState(true);
 
@@ -50,7 +61,7 @@ export default function SubscriptionClient() {
     return () => clearInterval(iv);
   }, []);
 
-  const handleSelect = (plan: any) => {
+  const handleSelect = (plan: Plan) => {
     const payload = {
       ...userData,
       role: plan.name,

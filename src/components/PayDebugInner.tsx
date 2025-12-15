@@ -8,11 +8,21 @@ export default function PayDebugInner() {
   const search = useSearchParams();
   const dataParam = search.get("data");
 
-  const [payData, setPayData] = useState<any>(null);
+  interface PayData {
+    email: string;
+    plan: string;
+    role: string;
+    priceUSD: number;
+    priceGHS: number;
+    username: string;
+    fullName: string;
+  }
+
+  const [payData, setPayData] = useState<PayData | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
 
-  const addLog = (m: any) => {
+  const addLog = (m: unknown) => {
     const s =
       typeof m === "string"
         ? m
@@ -44,7 +54,7 @@ export default function PayDebugInner() {
       setScriptLoaded(true);
       addLog(
         "Paystack script loaded (onload). window.PaystackPop available? " +
-          !!(window as any).PaystackPop
+          !!((window as unknown as { PaystackPop?: unknown }).PaystackPop)
       );
     };
     s.onerror = () => {
@@ -139,7 +149,7 @@ export default function PayDebugInner() {
       });
       addLog({
         scriptLoaded,
-        PaystackPresent: !!(window as any).PaystackPop,
+        PaystackPresent: !!((window as unknown as { PaystackPop?: unknown }).PaystackPop),
         amountInPesewas,
         reference,
       });
@@ -154,7 +164,7 @@ export default function PayDebugInner() {
         return;
       }
 
-      if (!scriptLoaded || !(window as any).PaystackPop) {
+      if (!scriptLoaded || !((window as unknown as { PaystackPop?: unknown }).PaystackPop)) {
         addLog("Aborting: Paystack script not loaded or PaystackPop missing.");
         alert("Paystack checkout not ready yet. Please wait a moment and try again.");
         return;
@@ -166,9 +176,10 @@ export default function PayDebugInner() {
         return;
       }
 
-      let handler;
+      let handler: { openIframe: () => void } | undefined;
       try {
-        handler = (window as any).PaystackPop.setup({
+        const PaystackPop = (window as unknown as { PaystackPop: { setup: (config: unknown) => { openIframe: () => void } } }).PaystackPop;
+        handler = PaystackPop.setup({
           key: PAYSTACK_PUBLIC_KEY,
           email,
           amount: amountInPesewas,
@@ -180,7 +191,7 @@ export default function PayDebugInner() {
               { display_name: "User", variable_name: "username", value: username },
             ],
           },
-          callback: function (resp: any) {
+          callback: function (resp: { reference: string }) {
             addLog("Paystack callback success: " + JSON.stringify(resp));
             (async () => {
               try {

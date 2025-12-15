@@ -32,8 +32,9 @@ export default function LoginListerForm() {
         return;
       }
       router.push("/ListerPlan");
-    } catch (err: any) {
-      setMessage({ type: "error", text: err?.message || String(err) });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setMessage({ type: "error", text: errorMessage });
     } finally {
       setBusy(false);
     }
@@ -51,8 +52,9 @@ export default function LoginListerForm() {
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) setMessage({ type: "error", text: error.message });
       else setMessage({ type: "info", text: "Check your inbox for a reset link." });
-    } catch (err: any) {
-      setMessage({ type: "error", text: err?.message || "Unable to send reset link." });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Unable to send reset link.";
+      setMessage({ type: "error", text: errorMessage });
     } finally {
       setBusy(false);
     }
