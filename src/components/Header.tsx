@@ -160,7 +160,6 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-6 text-sm text-[var(--foreground)]">
             <Link href="/" className="hover:opacity-70 transition">Home</Link>
             <Link href="/investors" className="hover:opacity-70 transition">Investor Boardview</Link>
-            <Link href="/ListerPlan" className="hover:opacity-70 transition">Renew Subscription</Link>
             <Link href="/privacy" className="hover:opacity-70 transition">Privacy</Link>
             <Link href="/support" className="hover:opacity-70 transition">Support</Link>
             <Link href="/WaitList" className="hover:opacity-70 transition">Waitlist</Link>
