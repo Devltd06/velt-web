@@ -110,89 +110,88 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-16 px-6">
-      <div className="bg-white border border-gray-300 p-8 rounded-2xl w-full max-w-md text-black shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] py-16 px-6">
+      <div className="bg-[var(--background)] border border-[var(--foreground)]/20 p-8 rounded-2xl w-full max-w-md shadow-lg">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold">Create an Account</h2>
-          <p className="mt-2 text-gray-700">Sign up to continue</p>
+          <h2 className="text-2xl font-bold text-[var(--foreground)]">Create an Account</h2>
+          <p className="mt-2 text-[var(--foreground)]/60">Sign up to continue</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-black mb-1">Username</label>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Username</label>
             <input
               name="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Choose a username"
-              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+              className="w-full p-3 rounded border border-[var(--foreground)]/20 placeholder-[var(--foreground)]/40 text-[var(--foreground)] bg-[var(--background)]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Full Name</label>
             <input
               name="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Your name (optional)"
-              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+              className="w-full p-3 rounded border border-[var(--foreground)]/20 placeholder-[var(--foreground)]/40 text-[var(--foreground)] bg-[var(--background)]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black mb-1">Bio</label>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Bio</label>
             <input
               name="bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell us about yourself (optional)"
-              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+              className="w-full p-3 rounded border border-[var(--foreground)]/20 placeholder-[var(--foreground)]/40 text-[var(--foreground)] bg-[var(--background)]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black mb-1">Email</label>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Email</label>
             <input
               name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+              className="w-full p-3 rounded border border-[var(--foreground)]/20 placeholder-[var(--foreground)]/40 text-[var(--foreground)] bg-[var(--background)]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-black mb-1">Password</label>
+            <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Password</label>
             <input
               name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create a strong password"
-              className="w-full p-3 rounded border border-gray-300 placeholder-gray-400 text-black"
+              className="w-full p-3 rounded border border-[var(--foreground)]/20 placeholder-[var(--foreground)]/40 text-[var(--foreground)] bg-[var(--background)]"
             />
           </div>
 
-          <label className="flex items-center gap-3 text-sm text-gray-700">
+          <label className="flex items-center gap-3 text-sm text-[var(--foreground)]/70">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-            <span>I agree to the <a href="/privacy" className="underline" style={{ color: "#d4af37" }}>Privacy Policy</a></span>
+            <span>I agree to the <a href="/privacy" className="underline text-[var(--foreground)]">Privacy Policy</a></span>
           </label>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded font-semibold text-black transition hover:opacity-90"
-            style={{ backgroundColor: "#d4af37" }}
+            className="w-full py-3 rounded font-semibold transition hover:opacity-80 bg-[var(--foreground)] text-[var(--background)]"
           >
             {loading ? "Creating account..." : "Next: Subscription"}
           </button>
         </form>
 
-        <p className="text-center text-gray-700 mt-4">
+        <p className="text-center text-[var(--foreground)]/70 mt-4">
           Already have an account?
-          <a href="/loginlister" className="underline ml-1" style={{ color: "#d4af37" }}>
+          <a href="/loginlister" className="underline ml-1 text-[var(--foreground)]">
             Sign in
           </a>
         </p>

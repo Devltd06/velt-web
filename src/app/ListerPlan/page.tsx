@@ -240,47 +240,47 @@ export default function ListerPlanPage(): JSX.Element {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#000000", padding: 28, fontFamily: "system-ui, Arial, sans-serif" }}>
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] p-7" style={{ fontFamily: "system-ui, Arial, sans-serif" }}>
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, color: "#000000" }}>Renew Subscription</h1>
+          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800 }}>Renew Subscription</h1>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 12, color: "#6b7280" }}>Monthly</div>
-            <div style={{ fontWeight: 800, color: "#d4af37" }}>GHS {PRICE_GHS.toFixed(2)}</div>
+            <div className="text-[var(--foreground)]/60" style={{ fontSize: 12 }}>Monthly</div>
+            <div style={{ fontWeight: 800 }}>GHS {PRICE_GHS.toFixed(2)}</div>
           </div>
         </header>
 
-        <section style={{ marginTop: 18, border: "2px solid #d4af37", padding: 16, borderRadius: 10, background: "#faf5f0" }}>
+        <section className="border-2 border-[var(--foreground)]/20 bg-[var(--foreground)]/5" style={{ marginTop: 18, padding: 16, borderRadius: 10 }}>
           <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Name</div>
-              <div style={{ fontWeight: 700, color: "#000000" }}>{profile?.full_name ?? "Not provided"}</div>
+              <div className="text-[var(--foreground)]/60" style={{ fontSize: 12, marginBottom: 6 }}>Name</div>
+              <div style={{ fontWeight: 700 }}>{profile?.full_name ?? "Not provided"}</div>
             </div>
 
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Email</div>
-              <div style={{ fontWeight: 700, color: "#000000" }}>{profile?.email ?? "Not provided"}</div>
+              <div className="text-[var(--foreground)]/60" style={{ fontSize: 12, marginBottom: 6 }}>Email</div>
+              <div style={{ fontWeight: 700 }}>{profile?.email ?? "Not provided"}</div>
             </div>
 
             <div>
               <button
                 onClick={handlePay}
                 disabled={processing}
+                className="bg-[var(--foreground)] text-[var(--background)]"
                 style={{
-                  background: processing ? "#c9a461" : "#d4af37",
-                  color: "#000000",
                   padding: "12px 18px",
                   borderRadius: 10,
                   border: "none",
                   cursor: processing ? "not-allowed" : "pointer",
                   fontWeight: 800,
+                  opacity: processing ? 0.7 : 1,
                 }}
               >
                 {processing ? "Processing..." : "Renew GHS " + PRICE_GHS.toFixed(2)}
               </button>
             </div>
           </div>
-          <div style={{ marginTop: 12, fontSize: 13, color: "#475569" }}>Renew your subscription to continue publishing listings. Your subscription will be extended by another month after payment.</div>
+          <div className="text-[var(--foreground)]/60" style={{ marginTop: 12, fontSize: 13 }}>Renew your subscription to continue publishing listings. Your subscription will be extended by another month after payment.</div>
         </section>
       </div>
     </div>

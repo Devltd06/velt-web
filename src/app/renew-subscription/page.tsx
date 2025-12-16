@@ -6,8 +6,6 @@ import { FaEnvelope, FaLock, FaCheckCircle, FaExclamationTriangle, FaCrown, FaAr
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 
-const GOLD = "#D4AF37";
-
 // Single Premium Plan
 const PREMIUM_PLAN = {
   id: "premium",
@@ -214,7 +212,7 @@ export default function RenewSubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-[var(--background)] py-12 px-4">
       <div className="max-w-lg mx-auto">
         {/* Progress Steps - only show for expired subscriptions */}
         {subscriptionExpired && step !== "active" && (
@@ -224,20 +222,23 @@ export default function RenewSubscriptionPage() {
               const currentIdx = steps.indexOf(step);
               const isActive = currentIdx >= idx;
               const isCurrent = steps[idx] === step;
+              const canNavigate = idx < currentIdx; // Can only go back to completed steps
               
               return (
                 <div key={label} className="flex items-center">
-                  <motion.div
+                  <motion.button
+                    onClick={() => canNavigate && setStep(steps[idx])}
+                    disabled={!canNavigate}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                      isActive ? "text-black" : "bg-gray-200 text-gray-500"
-                    }`}
-                    style={{ backgroundColor: isActive ? GOLD : undefined }}
+                      isActive ? "bg-[var(--foreground)] text-[var(--background)]" : "bg-[var(--foreground)]/10 text-[var(--foreground)]/50"
+                    } ${canNavigate ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
                     animate={{ scale: isCurrent ? 1.1 : 1 }}
+                    whileTap={canNavigate ? { scale: 0.95 } : {}}
                 >
                   {idx + 1}
-                </motion.div>
+                </motion.button>
                 {idx < 3 && (
-                  <div className={`w-8 h-1 mx-1 rounded ${isActive ? "bg-amber-300" : "bg-gray-200"}`} />
+                  <div className={`w-8 h-1 mx-1 rounded ${isActive ? "bg-[var(--foreground)]" : "bg-[var(--foreground)]/10"}`} />
                 )}
               </div>
             );
@@ -253,42 +254,42 @@ export default function RenewSubscriptionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              className="bg-[var(--background)] rounded-2xl shadow-xl border border-[var(--foreground)]/10 p-8"
             >
               <div className="text-center mb-6">
-                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${GOLD}20` }}>
-                  <FaCrown className="text-2xl" style={{ color: GOLD }} />
+                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--foreground)]/10">
+                  <FaCrown className="text-2xl text-[var(--foreground)]" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900">Renew Subscription</h1>
-                <p className="text-gray-600 mt-2">Sign in to your account to continue</p>
+                <h1 className="text-2xl font-bold">Renew Subscription</h1>
+                <p className="text-[var(--foreground)]/60 mt-2">Sign in to your account to continue</p>
               </div>
 
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium mb-1">Email</label>
                   <div className="relative">
-                    <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FaEnvelope className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground)]/40" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                      className="w-full pl-10 pr-4 py-3 border border-[var(--foreground)]/20 rounded-lg focus:border-[var(--foreground)]/50 outline-none bg-[var(--background)] text-[var(--foreground)]"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium mb-1">Password</label>
                   <div className="relative">
-                    <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground)]/40" />
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Your password"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                      className="w-full pl-10 pr-4 py-3 border border-[var(--foreground)]/20 rounded-lg focus:border-[var(--foreground)]/50 outline-none bg-[var(--background)] text-[var(--foreground)]"
                       required
                     />
                   </div>
@@ -298,7 +299,7 @@ export default function RenewSubscriptionPage() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+                    className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm"
                   >
                     {error}
                   </motion.div>
@@ -307,11 +308,10 @@ export default function RenewSubscriptionPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-lg font-semibold text-black transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ backgroundColor: GOLD }}
+                  className="w-full py-3 rounded-lg font-semibold transition-all hover:opacity-80 disabled:opacity-50 flex items-center justify-center gap-2 bg-[var(--foreground)] text-[var(--background)]"
                 >
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-[var(--background)]/30 border-t-[var(--background)] rounded-full animate-spin" />
                   ) : (
                     <>
                       Sign In & Continue
@@ -321,9 +321,9 @@ export default function RenewSubscriptionPage() {
                 </button>
               </form>
 
-              <p className="text-center text-gray-600 mt-6 text-sm">
+              <p className="text-center text-[var(--foreground)]/60 mt-6 text-sm">
                 Don&apos;t have an account?{" "}
-                <Link href="/signup" className="font-semibold hover:underline" style={{ color: GOLD }}>
+                <Link href="/signup" className="font-semibold hover:underline text-[var(--foreground)]">
                   Sign Up
                 </Link>
               </p>
@@ -337,24 +337,23 @@ export default function RenewSubscriptionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              className="bg-[var(--background)] rounded-2xl shadow-xl border border-[var(--foreground)]/10 p-8"
             >
               <div className="text-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", delay: 0.1 }}
-                  className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
-                  style={{ backgroundColor: `${GOLD}20` }}
+                  className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--foreground)]/10"
                 >
-                  <FaUser className="text-3xl" style={{ color: GOLD }} />
+                  <FaUser className="text-3xl text-[var(--foreground)]" />
                 </motion.div>
                 
                 <motion.h2 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-2xl font-bold text-gray-900 mb-1"
+                  className="text-2xl font-bold mb-1"
                 >
                   Welcome back!
                 </motion.h2>
@@ -364,11 +363,11 @@ export default function RenewSubscriptionPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <p className="text-xl font-semibold" style={{ color: GOLD }}>
+                  <p className="text-xl font-semibold">
                     @{user.username || "user"}
                   </p>
                   {user.full_name && (
-                    <p className="text-gray-600 mt-1">{user.full_name}</p>
+                    <p className="text-[var(--foreground)]/60 mt-1">{user.full_name}</p>
                   )}
                 </motion.div>
 
@@ -377,9 +376,9 @@ export default function RenewSubscriptionPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="mt-3 inline-block px-4 py-2 bg-gray-100 rounded-full"
+                    className="mt-3 inline-block px-4 py-2 bg-[var(--foreground)]/10 rounded-full"
                   >
-                    <p className="text-gray-700 text-sm font-medium">{user.profession}</p>
+                    <p className="text-sm font-medium">{user.profession}</p>
                   </motion.div>
                 )}
 
@@ -387,13 +386,13 @@ export default function RenewSubscriptionPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl"
+                  className="mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl"
                 >
-                  <div className="flex items-center justify-center gap-2 text-amber-700">
+                  <div className="flex items-center justify-center gap-2 text-amber-500">
                     <FaExclamationTriangle />
                     <span className="font-medium">Subscription Expired</span>
                   </div>
-                  <p className="text-amber-600 text-sm mt-2">
+                  <p className="text-amber-500/80 text-sm mt-2">
                     Your subscription has ended. Renew now to continue enjoying all features.
                   </p>
                 </motion.div>
@@ -403,8 +402,7 @@ export default function RenewSubscriptionPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
                   onClick={proceedToSelectPlan}
-                  className="w-full mt-6 py-3 rounded-lg font-semibold text-black transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                  style={{ backgroundColor: GOLD }}
+                  className="w-full mt-6 py-3 rounded-lg font-semibold transition-all hover:opacity-80 flex items-center justify-center gap-2 bg-[var(--foreground)] text-[var(--background)]"
                 >
                   Continue to Renew
                   <FaArrowRight />
@@ -420,47 +418,47 @@ export default function RenewSubscriptionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              className="bg-[var(--background)] rounded-2xl shadow-xl border border-[var(--foreground)]/10 p-8"
             >
               <div className="text-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", delay: 0.1 }}
-                  className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center bg-green-100"
+                  className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center bg-green-500/10"
                 >
                   <FaCheckCircle className="text-4xl text-green-500" />
                 </motion.div>
                 
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Hey, {user.full_name || user.username || "there"}!</h2>
-                <p className="text-lg" style={{ color: GOLD }}>@{user.username}</p>
+                <h2 className="text-2xl font-bold mb-1">Hey, {user.full_name || user.username || "there"}!</h2>
+                <p className="text-lg text-[var(--foreground)]">@{user.username}</p>
                 
                 {user.profession && (
-                  <p className="text-gray-600 mt-1">{user.profession}</p>
+                  <p className="text-[var(--foreground)]/60 mt-1">{user.profession}</p>
                 )}
 
-                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-                  <div className="flex items-center justify-center gap-2 text-green-700">
+                <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                  <div className="flex items-center justify-center gap-2 text-green-500">
                     <FaCheckCircle />
                     <span className="font-medium">Your subscription is still active!</span>
                   </div>
-                  <p className="text-green-600 mt-2">
+                  <p className="text-green-500/80 mt-2">
                     You have <span className="font-bold text-lg">{daysRemaining} days</span> remaining on your{" "}
                     <span className="font-semibold capitalize">{user.subscription_plan || "Premium"}</span> plan.
                   </p>
                   {user.subscription_expires_at && (
-                    <p className="text-green-500 text-sm mt-2">
+                    <p className="text-green-500/70 text-sm mt-2">
                       Expires on: <span className="font-semibold">{new Date(user.subscription_expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
                     </p>
                   )}
                 </div>
 
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-center justify-center gap-2 text-blue-700">
+                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                  <div className="flex items-center justify-center gap-2 text-blue-500">
                     <FaMobileAlt className="text-xl" />
                     <span className="font-medium">Continue in the App</span>
                   </div>
-                  <p className="text-blue-600 text-sm mt-2">
+                  <p className="text-blue-500/80 text-sm mt-2">
                     Your subscription is active. Please login and continue using the VELT mobile app to access all features.
                   </p>
                 </div>
@@ -478,13 +476,13 @@ export default function RenewSubscriptionPage() {
                   
                   <Link
                     href="/"
-                    className="w-full py-3 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all text-center"
+                    className="w-full py-3 rounded-lg font-semibold text-[var(--foreground)] bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/20 transition-all text-center"
                   >
                     Go Back Home
                   </Link>
                 </div>
 
-                <p className="text-gray-400 text-xs mt-4">
+                <p className="text-[var(--foreground)]/40 text-xs mt-4">
                   Don&apos;t have the app? Download VELT from the App Store or Google Play.
                 </p>
               </div>
@@ -498,28 +496,27 @@ export default function RenewSubscriptionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              className="bg-[var(--background)] rounded-2xl shadow-xl border border-[var(--foreground)]/10 p-8"
             >
               <div className="text-center mb-6">
-                <FaCrown className="text-4xl mx-auto mb-3" style={{ color: GOLD }} />
-                <h2 className="text-2xl font-bold text-gray-900">VELT Premium</h2>
-                <p className="text-gray-600 mt-2">Unlock all features with our Premium plan</p>
+                <FaCrown className="text-4xl mx-auto mb-3 text-[var(--foreground)]" />
+                <h2 className="text-2xl font-bold">VELT Premium</h2>
+                <p className="text-[var(--foreground)]/60 mt-2">Unlock all features with our Premium plan</p>
               </div>
 
               <motion.div
-                className="p-6 rounded-xl border-2 transition-all"
-                style={{ borderColor: GOLD, backgroundColor: `${GOLD}10` }}
+                className="p-6 rounded-xl border-2 border-[var(--foreground)] bg-[var(--foreground)]/5 transition-all"
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
               >
                 <div className="text-center mb-4">
-                  <div className="text-4xl font-bold" style={{ color: GOLD }}>GH₵{PREMIUM_PLAN.priceGHS}</div>
-                  <div className="text-gray-500 text-sm">per month</div>
+                  <div className="text-4xl font-bold text-[var(--foreground)]">GH₵{PREMIUM_PLAN.priceGHS}</div>
+                  <div className="text-[var(--foreground)]/50 text-sm">per month</div>
                 </div>
 
                 <ul className="space-y-3 mb-6">
                   {PREMIUM_PLAN.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-3 text-gray-700">
+                    <li key={feature} className="flex items-center gap-3 text-[var(--foreground)]/80">
                       <FaCheckCircle className="text-green-500 flex-shrink-0" />
                       {feature}
                     </li>
@@ -528,15 +525,14 @@ export default function RenewSubscriptionPage() {
 
                 <button
                   onClick={() => handleSelectPlan(PREMIUM_PLAN)}
-                  className="w-full py-3 rounded-lg font-semibold text-black transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                  style={{ backgroundColor: GOLD }}
+                  className="w-full py-3 rounded-lg font-semibold transition-all hover:opacity-80 flex items-center justify-center gap-2 bg-[var(--foreground)] text-[var(--background)]"
                 >
                   Continue to Payment
                   <FaArrowRight />
                 </button>
               </motion.div>
 
-              <p className="text-center text-gray-400 text-xs mt-4">
+              <p className="text-center text-[var(--foreground)]/40 text-xs mt-4">
                 Your subscription will be renewed for 1 month
               </p>
             </motion.div>
@@ -549,30 +545,30 @@ export default function RenewSubscriptionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-white rounded-2xl shadow-xl p-8"
+              className="bg-[var(--background)] rounded-2xl shadow-xl border border-[var(--foreground)]/10 p-8"
             >
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Confirm Payment</h2>
-                <p className="text-gray-600 mt-2">Review your subscription details</p>
+                <h2 className="text-2xl font-bold">Confirm Payment</h2>
+                <p className="text-[var(--foreground)]/60 mt-2">Review your subscription details</p>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <div className="bg-[var(--foreground)]/5 rounded-xl p-4 mb-6">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-gray-600">Plan</span>
+                  <span className="text-[var(--foreground)]/60">Plan</span>
                   <span className="font-semibold">{selectedPlan.name}</span>
                 </div>
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-gray-600">Email</span>
+                  <span className="text-[var(--foreground)]/60">Email</span>
                   <span className="font-semibold">{user?.email}</span>
                 </div>
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-gray-600">Duration</span>
+                  <span className="text-[var(--foreground)]/60">Duration</span>
                   <span className="font-semibold">1 Month</span>
                 </div>
-                <div className="border-t border-gray-200 pt-3 mt-3">
+                <div className="border-t border-[var(--foreground)]/10 pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-900 font-bold">Total</span>
-                    <span className="text-2xl font-bold" style={{ color: GOLD }}>
+                    <span className="font-bold">Total</span>
+                    <span className="text-2xl font-bold text-[var(--foreground)]">
                       GH₵{selectedPlan.priceGHS}
                     </span>
                   </div>
@@ -580,7 +576,7 @@ export default function RenewSubscriptionPage() {
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm mb-4">
                   {error}
                 </div>
               )}
@@ -589,18 +585,17 @@ export default function RenewSubscriptionPage() {
                 <button
                   onClick={handlePayment}
                   disabled={loading}
-                  className="w-full py-3 rounded-lg font-semibold text-black transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ backgroundColor: GOLD }}
+                  className="w-full py-3 rounded-lg font-semibold transition-all hover:opacity-80 disabled:opacity-50 flex items-center justify-center gap-2 bg-[var(--foreground)] text-[var(--background)]"
                 >
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-[var(--background)]/30 border-t-[var(--background)] rounded-full animate-spin" />
                   ) : (
                     <>Pay with Paystack</>
                   )}
                 </button>
                 <button
                   onClick={() => setStep("select")}
-                  className="w-full py-3 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all"
+                  className="w-full py-3 rounded-lg font-semibold text-[var(--foreground)] bg-[var(--foreground)]/10 hover:bg-[var(--foreground)]/20 transition-all"
                 >
                   Change Plan
                 </button>
@@ -614,27 +609,25 @@ export default function RenewSubscriptionPage() {
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl shadow-xl p-8 text-center"
+              className="bg-[var(--background)] rounded-2xl shadow-xl border border-[var(--foreground)]/10 p-8 text-center"
             >
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2 }}
-                className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
-                style={{ backgroundColor: `${GOLD}20` }}
+                className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center bg-green-500/10"
               >
-                <FaCheckCircle className="text-4xl" style={{ color: GOLD }} />
+                <FaCheckCircle className="text-4xl text-green-500" />
               </motion.div>
               
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Subscription Renewed!</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl font-bold mb-2">Subscription Renewed!</h2>
+              <p className="text-[var(--foreground)]/60 mb-6">
                 Your <span className="font-semibold">{selectedPlan?.name}</span> has been successfully renewed for 1 month.
               </p>
 
               <Link
                 href="/"
-                className="inline-block w-full py-3 rounded-lg font-semibold text-black transition-all hover:opacity-90"
-                style={{ backgroundColor: GOLD }}
+                className="inline-block w-full py-3 rounded-lg font-semibold transition-all hover:opacity-80 bg-[var(--foreground)] text-[var(--background)]"
               >
                 Go to Home
               </Link>

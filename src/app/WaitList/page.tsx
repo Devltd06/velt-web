@@ -3,41 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { waitlistService } from "@/lib/waitlistService";
-import { FaEnvelope, FaCheckCircle, FaExclamationCircle, FaArrowLeft, FaRocket, FaBell, FaGift, FaStar, FaUsers, FaMobile } from "react-icons/fa";
+import { FaEnvelope, FaCheckCircle, FaExclamationCircle, FaArrowLeft, FaRocket, FaGift, FaUsers, FaMobile } from "react-icons/fa";
 import { motion } from "framer-motion";
-
-const GOLD = "#D4AF37";
-
-// Floating particle component
-const FloatingParticle = ({ delay, x, y, size }: { delay: number; x: string; y: string; size: number }) => (
-  <motion.div
-    className="absolute rounded-full opacity-20"
-    style={{
-      left: x,
-      top: y,
-      width: size,
-      height: size,
-      background: `linear-gradient(135deg, ${GOLD} 0%, #F4D03F 100%)`,
-    }}
-    animate={{
-      y: [0, -30, 0],
-      scale: [1, 1.2, 1],
-      opacity: [0.1, 0.3, 0.1],
-    }}
-    transition={{
-      duration: 6,
-      delay,
-      repeat: Infinity,
-      ease: "easeInOut",
-    }}
-  />
-);
 
 const benefits = [
   { icon: FaRocket, title: "Early Access", description: "Be the first to experience new features before anyone else" },
   { icon: FaGift, title: "Exclusive Perks", description: "Get special discounts and bonuses as an early supporter" },
-  { icon: FaBell, title: "Priority Updates", description: "Receive important announcements and news first" },
-  { icon: FaStar, title: "Founder Benefits", description: "Lifetime benefits for early waitlist members" },
 ];
 
 export default function WaitlistPage() {
@@ -87,20 +58,11 @@ export default function WaitlistPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      {/* Background particles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <FloatingParticle delay={0} x="10%" y="20%" size={12} />
-        <FloatingParticle delay={1} x="80%" y="10%" size={8} />
-        <FloatingParticle delay={2} x="70%" y="60%" size={10} />
-        <FloatingParticle delay={3} x="20%" y="70%" size={14} />
-        <FloatingParticle delay={4} x="90%" y="40%" size={6} />
-        <FloatingParticle delay={5} x="30%" y="30%" size={9} />
-      </div>
 
       {/* Header */}
-      <header className="border-b border-gray-200 bg-[var(--background)]/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-[var(--foreground)]/10 bg-[var(--background)]/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-gray-600 hover:text-[var(--foreground)] transition">
+          <Link href="/" className="flex items-center gap-2 text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition">
             <FaArrowLeft size={14} />
             <span className="text-sm font-medium">Back Home</span>
           </Link>
@@ -118,17 +80,17 @@ export default function WaitlistPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 mb-6">
-              <FaUsers style={{ color: GOLD }} />
-              <span className="text-sm font-medium text-amber-800">Join 2,000+ waiting</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--foreground)]/5 border border-[var(--foreground)]/10 mb-6">
+              <FaUsers className="text-[var(--foreground)]" />
+              <span className="text-sm font-medium">Join 2,000+ waiting</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
               Be the First to Experience{" "}
-              <span style={{ color: GOLD }}>VELT</span>
+              <span className="text-[var(--foreground)]">VELT</span>
             </h1>
 
-            <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+            <p className="text-lg text-[var(--foreground)]/60 mb-8 leading-relaxed">
               Join our exclusive waitlist and get early access to the future of creator monetization and billboard advertising. Don&apos;t miss out on special launch perks!
             </p>
 
@@ -140,17 +102,16 @@ export default function WaitlistPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100"
+                  className="flex items-start gap-3 p-4 rounded-xl bg-[var(--foreground)]/5 border border-[var(--foreground)]/10"
                 >
                   <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: `${GOLD}20` }}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--foreground)]/10"
                   >
-                    <benefit.icon style={{ color: GOLD }} />
+                    <benefit.icon className="text-[var(--foreground)]" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm">{benefit.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{benefit.description}</p>
+                    <p className="text-xs text-[var(--foreground)]/50 mt-1">{benefit.description}</p>
                   </div>
                 </motion.div>
               ))}
@@ -163,43 +124,42 @@ export default function WaitlistPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-8 md:p-10">
+            <div className="bg-[var(--background)] rounded-2xl shadow-2xl border border-[var(--foreground)]/10 p-8 md:p-10">
               <div className="text-center mb-8">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", delay: 0.3 }}
-                  className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
-                  style={{ backgroundColor: `${GOLD}20` }}
+                  className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--foreground)]/10"
                 >
-                  <FaRocket className="text-2xl" style={{ color: GOLD }} />
+                  <FaRocket className="text-2xl text-[var(--foreground)]" />
                 </motion.div>
-                <h2 className="text-2xl font-bold text-gray-900">Join the Waitlist</h2>
-                <p className="text-gray-500 mt-2">Get notified when we launch</p>
+                <h2 className="text-2xl font-bold">Join the Waitlist</h2>
+                <p className="text-[var(--foreground)]/50 mt-2">Get notified when we launch</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                  <label className="block text-sm font-medium mb-2">Your Name</label>
                   <input
                     type="text"
                     placeholder="John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-400 text-gray-900 placeholder-gray-400 transition"
+                    className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-xl focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
                     disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                  <label className="block text-sm font-medium mb-2">Email Address *</label>
                   <input
                     type="email"
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-400 text-gray-900 placeholder-gray-400 transition"
+                    className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-xl focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
                     disabled={loading}
                   />
                 </div>
@@ -209,11 +169,10 @@ export default function WaitlistPage() {
                   disabled={loading}
                   whileHover={!loading ? { scale: 1.02 } : {}}
                   whileTap={!loading ? { scale: 0.98 } : {}}
-                  className="w-full py-4 rounded-xl font-semibold text-black transition flex items-center justify-center gap-2 disabled:opacity-50"
-                  style={{ backgroundColor: GOLD }}
+                  className="w-full py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50 bg-[var(--foreground)] text-[var(--background)]"
                 >
                   {loading ? (
-                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-[var(--background)]/30 border-t-[var(--background)] rounded-full animate-spin" />
                   ) : (
                     <>
                       <FaEnvelope />
@@ -226,10 +185,10 @@ export default function WaitlistPage() {
                   <motion.div
                     initial={{ y: -10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3"
+                    className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl flex items-start gap-3"
                   >
-                    <FaCheckCircle className="text-green-600 text-lg mt-0.5 flex-shrink-0" />
-                    <p className="text-green-800 text-sm">{message}</p>
+                    <FaCheckCircle className="text-green-500 text-lg mt-0.5 flex-shrink-0" />
+                    <p className="text-green-500 text-sm">{message}</p>
                   </motion.div>
                 )}
 
@@ -237,15 +196,15 @@ export default function WaitlistPage() {
                   <motion.div
                     initial={{ y: -10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
+                    className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3"
                   >
-                    <FaExclamationCircle className="text-red-600 text-lg mt-0.5 flex-shrink-0" />
-                    <p className="text-red-800 text-sm">{message}</p>
+                    <FaExclamationCircle className="text-red-500 text-lg mt-0.5 flex-shrink-0" />
+                    <p className="text-red-500 text-sm">{message}</p>
                   </motion.div>
                 )}
               </form>
 
-              <p className="text-center text-xs text-gray-400 mt-6">
+              <p className="text-center text-xs text-[var(--foreground)]/40 mt-6">
                 We respect your privacy. Unsubscribe at any time.
               </p>
             </div>
@@ -257,13 +216,13 @@ export default function WaitlistPage() {
               transition={{ delay: 0.5 }}
               className="mt-8 text-center"
             >
-              <p className="text-sm text-gray-500 mb-3 flex items-center justify-center gap-2">
-                <FaMobile style={{ color: GOLD }} />
+              <p className="text-sm text-[var(--foreground)]/50 mb-3 flex items-center justify-center gap-2">
+                <FaMobile className="text-[var(--foreground)]" />
                 Coming soon to mobile
               </p>
               <div className="flex justify-center gap-4">
-                <div className="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500">App Store</div>
-                <div className="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500">Google Play</div>
+                <div className="px-4 py-2 bg-[var(--foreground)]/10 rounded-lg text-xs text-[var(--foreground)]/50">App Store</div>
+                <div className="px-4 py-2 bg-[var(--foreground)]/10 rounded-lg text-xs text-[var(--foreground)]/50">Google Play</div>
               </div>
             </motion.div>
           </motion.div>

@@ -90,34 +90,23 @@ export default function PayDebugInner() {
 
   if (!payData) {
     return (
-      <div className="min-h-screen flex items-start justify-center bg-white text-black p-8">
+      <div className="min-h-screen flex items-start justify-center bg-[var(--background)] text-[var(--foreground)] p-8">
         <div className="max-w-2xl w-full">
           <h2 className="text-2xl font-bold mb-4">Missing Payment Details</h2>
-          <p className="mb-4 text-gray-700">
+          <p className="mb-4 text-[var(--foreground)]/70">
             This page requires payment data from the subscription page. Go back and choose a plan.
           </p>
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 rounded font-semibold text-black"
-            style={{ backgroundColor: "#d4af37" }}
+            className="px-4 py-2 rounded font-semibold bg-[var(--foreground)] text-[var(--background)]"
           >
             Go Back
           </button>
 
-          <div className="mt-6 bg-gray-100 p-4 rounded border border-gray-300">
-            <h3 className="font-semibold mb-2 text-black">Debug Logs</h3>
+          <div className="mt-6 bg-[var(--foreground)]/5 p-4 rounded border border-[var(--foreground)]/20">
+            <h3 className="font-semibold mb-2">Debug Logs</h3>
             <div
-              style={{
-                maxHeight: 300,
-                overflow: "auto",
-                fontSize: 12,
-                whiteSpace: "pre-wrap",
-                color: "#000000",
-                background: "#ffffff",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid #d4af37",
-              }}
+              className="max-h-[300px] overflow-auto text-xs whitespace-pre-wrap p-2 rounded border border-[var(--foreground)]/10 bg-[var(--background)]"
             >
               {logs.map((l, i) => (
                 <div key={i} className="mb-1">
@@ -240,45 +229,34 @@ export default function PayDebugInner() {
   };
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-white text-black p-8 space-y-6">
+    <div className="min-h-screen flex items-start justify-center bg-[var(--background)] text-[var(--foreground)] p-8 space-y-6">
       <div className="max-w-2xl w-full space-y-6">
-        <div className="bg-white border border-gray-300 rounded p-6">
+        <div className="bg-[var(--background)] border border-[var(--foreground)]/20 rounded p-6">
           <h2 className="text-2xl font-bold mb-2">Confirm Payment</h2>
-          <p className="text-gray-700">Email: {email}</p>
-          <p className="text-gray-700">
+          <p className="text-[var(--foreground)]/70">Email: {email}</p>
+          <p className="text-[var(--foreground)]/70">
             {username} {fullName ? `(${fullName})` : ""}
           </p>
-          <p className="text-gray-700">Plan: {plan}</p>
-          <p className="text-gray-700 mb-3">
+          <p className="text-[var(--foreground)]/70">Plan: {plan}</p>
+          <p className="text-[var(--foreground)]/70 mb-3">
             ${Number(priceUSD).toFixed(2)} (GHS {Number(pghs).toFixed(2)})
           </p>
 
           <button
             onClick={handlePay}
-            className="px-6 py-3 rounded font-semibold text-black"
-            style={{ backgroundColor: "#d4af37" }}
+            className="px-6 py-3 rounded font-semibold bg-[var(--foreground)] text-[var(--background)]"
           >
             Pay with Paystack
           </button>
         </div>
 
-        <div className="bg-gray-100 p-4 rounded border border-gray-300">
-          <h3 className="font-semibold mb-2 text-black">Debug Logs</h3>
+        <div className="bg-[var(--foreground)]/5 p-4 rounded border border-[var(--foreground)]/20">
+          <h3 className="font-semibold mb-2">Debug Logs</h3>
           <div
-            style={{
-              maxHeight: 300,
-              overflow: "auto",
-              fontSize: 12,
-              whiteSpace: "pre-wrap",
-              color: "#000000",
-              background: "#ffffff",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #d4af37",
-            }}
+            className="max-h-[300px] overflow-auto text-xs whitespace-pre-wrap p-2 rounded border border-[var(--foreground)]/10 bg-[var(--background)]"
           >
             {logs.length === 0 ? (
-              <div className="text-gray-600">
+              <div className="text-[var(--foreground)]/60">
                 No logs yet. Click Pay to start.
               </div>
             ) : (

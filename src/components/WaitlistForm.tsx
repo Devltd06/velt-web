@@ -85,7 +85,7 @@ export default function WaitlistForm({
               placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] text-black placeholder-gray-400 transition"
+              className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-lg focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
               disabled={loading}
             />
           </motion.div>
@@ -103,15 +103,15 @@ export default function WaitlistForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="flex-1 px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#d4af37] text-black placeholder-gray-400 transition"
+            className="flex-1 px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-lg focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
             disabled={loading}
           />
           <motion.button
             type="submit"
             disabled={loading}
-            whileHover={!loading ? { scale: 1.05 } : {}}
-            whileTap={!loading ? { scale: 0.95 } : {}}
-            className="px-6 py-3 bg-[#d4af37] text-black font-semibold rounded-lg hover:bg-[#c19b1a] disabled:opacity-50 transition flex items-center gap-2"
+            whileHover={!loading ? { scale: 1.02 } : {}}
+            whileTap={!loading ? { scale: 0.98 } : {}}
+            className="px-6 py-3 bg-[var(--foreground)] text-[var(--background)] font-semibold rounded-lg hover:opacity-80 disabled:opacity-50 transition flex items-center gap-2"
           >
             <FaEnvelope className="text-sm" />
             {loading ? "Joining..." : text}
