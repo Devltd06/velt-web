@@ -75,9 +75,6 @@ function MobileSideSheet({ isOpen, onClose, onShowComingSoon }: { isOpen: boolea
           <Link href="/investors" onClick={onClose} className="py-3 px-4 text-[var(--foreground)] hover:bg-[var(--foreground)]/5 rounded-lg transition">
             Investor Boardview
           </Link>
-          <Link href="/ListerPlan" onClick={onClose} className="py-3 px-4 text-[var(--foreground)] hover:bg-[var(--foreground)]/5 rounded-lg transition">
-            Renew Subscription
-          </Link>
           <Link href="/privacy" onClick={onClose} className="py-3 px-4 text-[var(--foreground)] hover:bg-[var(--foreground)]/5 rounded-lg transition">
             Privacy
           </Link>
