@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
+import VeltLogo from "@/components/VeltLogo";
 
 function ComingSoonModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   if (!isOpen) return null;
@@ -50,7 +51,10 @@ function MobileSideSheet({ isOpen, onClose, onShowComingSoon }: { isOpen: boolea
       >
         {/* Close Button */}
         <div className="flex justify-between items-center p-6 border-b border-[var(--foreground)] border-opacity-10">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--foreground)]/10 flex items-center justify-center">
+              <VeltLogo size={24} />
+            </div>
             <motion.div
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 2, repeat: Infinity }}
@@ -145,8 +149,11 @@ export default function Header() {
       <header className="w-full border-b border-[var(--foreground)] border-opacity-10 bg-[var(--background)] sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="text-xl font-bold text-[var(--foreground)]">
-            VELT
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--foreground)]/10 flex items-center justify-center">
+              <VeltLogo size={24} />
+            </div>
+            <span className="text-xl font-bold text-[var(--foreground)]">VELT</span>
           </Link>
 
           {/* Desktop Navigation */}

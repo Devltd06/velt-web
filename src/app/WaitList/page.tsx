@@ -5,6 +5,7 @@ import Link from "next/link";
 import { waitlistService } from "@/lib/waitlistService";
 import { FaEnvelope, FaCheckCircle, FaExclamationCircle, FaArrowLeft, FaRocket, FaGift, FaUsers, FaMobile } from "react-icons/fa";
 import { motion } from "framer-motion";
+import VeltLogo from "@/components/VeltLogo";
 
 const benefits = [
   { icon: FaRocket, title: "Early Access", description: "Be the first to experience new features before anyone else" },
@@ -130,9 +131,9 @@ export default function WaitlistPage() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", delay: 0.3 }}
-                  className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--foreground)]/10"
+                  className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-[var(--foreground)] text-[var(--background)]"
                 >
-                  <FaRocket className="text-2xl text-[var(--foreground)]" />
+                  <VeltLogo size={32} />
                 </motion.div>
                 <h2 className="text-2xl font-bold">Join the Waitlist</h2>
                 <p className="text-[var(--foreground)]/50 mt-2">Get notified when we launch</p>

@@ -23,21 +23,18 @@ CREATE POLICY "Anyone can join waitlist"
   FOR INSERT
   WITH CHECK (true);
 
--- Policy: Users can view their own entry if authenticated
-CREATE POLICY "Users can view own waitlist entry"
+-- Policy: Anyone can check if email exists (for duplicate check)
+CREATE POLICY "Anyone can check waitlist"
   ON waitlist
   FOR SELECT
-  USING (
-    email = (SELECT email FROM auth.users WHERE id = auth.uid())
-  );
+  USING (true);
 
--- Policy: Only admin can update status (via service role)
--- This is controlled at application level
+-- Policy: Only service role can update status
+-- This is controlled at application level with service role key
 CREATE POLICY "Service role can update waitlist"
   ON waitlist
   FOR UPDATE
-  USING (auth.role() = 'authenticated')
-  WITH CHECK (auth.role() = 'authenticated');
+  USING (auth.role() = 'service_role');
 
 -- Trigger to update the updated_at column
 CREATE OR REPLACE FUNCTION update_waitlist_timestamp()
@@ -48,22 +45,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS waitlist_update_timestamp ON waitlist;
 CREATE TRIGGER waitlist_update_timestamp
   BEFORE UPDATE ON waitlist
   FOR EACH ROW
   EXECUTE FUNCTION update_waitlist_timestamp();
-
--- View for getting waitlist stats
-CREATE OR REPLACE VIEW waitlist_stats AS
-SELECT
-  COUNT(*) as total_signups,
-  COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
-  COUNT(CASE WHEN status = 'confirmed' THEN 1 END) as confirmed,
-  COUNT(CASE WHEN status = 'joined' THEN 1 END) as joined,
-  DATE(created_at) as signup_date
-FROM waitlist
-GROUP BY DATE(created_at)
-ORDER BY signup_date DESC;
 
 -- Comment on table
 COMMENT ON TABLE waitlist IS 'Waitlist for MVP early access - stores email signups before app launch';

@@ -14,14 +14,14 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 0.15, scale: 1 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8B7355]"
+          className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-gradient-to-br from-[#C9A23A] to-[#A68A2E]"
         />
         {/* Top right blob */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 0.1, x: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="absolute top-32 -right-16 w-48 h-48 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] bg-gradient-to-bl from-[#C4A77D] to-[#8B7355] rotate-12"
+          className="absolute top-32 -right-16 w-48 h-48 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] bg-gradient-to-bl from-[#E0BC4D] to-[#A68A2E] rotate-12"
         />
         {/* Middle left squiggle */}
         <motion.svg
@@ -34,7 +34,7 @@ export default function Home() {
           <motion.path
             d="M10 50 Q 25 20, 50 50 T 90 50"
             fill="none"
-            stroke="#D4AF37"
+            stroke="#C9A23A"
             strokeWidth="4"
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
@@ -47,44 +47,44 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 0.12, scale: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
-          className="absolute bottom-20 right-10 w-40 h-40 rounded-full bg-gradient-to-tl from-[#D4AF37] to-[#C4A77D]"
+          className="absolute bottom-20 right-10 w-40 h-40 rounded-full bg-gradient-to-tl from-[#C9A23A] to-[#E0BC4D]"
         />
         {/* Center decorative ring */}
         <motion.div
           initial={{ opacity: 0, rotate: -45 }}
           animate={{ opacity: 0.08, rotate: 0 }}
           transition={{ duration: 1.2, delay: 0.3 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border-[3px] border-dashed border-[#D4AF37]"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border-[3px] border-dashed border-[#C9A23A]"
         />
         {/* Small floating dots */}
         <motion.div
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-40 left-1/4 w-3 h-3 rounded-full bg-[#D4AF37] opacity-30"
+          className="absolute top-40 left-1/4 w-3 h-3 rounded-full bg-[#C9A23A] opacity-30"
         />
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute top-60 right-1/4 w-2 h-2 rounded-full bg-[#C4A77D] opacity-40"
+          className="absolute top-60 right-1/4 w-2 h-2 rounded-full bg-[#E0BC4D] opacity-40"
         />
         <motion.div
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-40 left-1/3 w-4 h-4 rounded-full bg-[#8B7355] opacity-25"
+          className="absolute bottom-40 left-1/3 w-4 h-4 rounded-full bg-[#A68A2E] opacity-25"
         />
         {/* Bottom left triangle */}
         <motion.div
           initial={{ opacity: 0, rotate: 15 }}
           animate={{ opacity: 0.1, rotate: 0 }}
           transition={{ duration: 1, delay: 0.7 }}
-          className="absolute bottom-32 -left-10 w-0 h-0 border-l-[40px] border-l-transparent border-r-[40px] border-r-transparent border-b-[70px] border-b-[#D4AF37]"
+          className="absolute bottom-32 -left-10 w-0 h-0 border-l-[40px] border-l-transparent border-r-[40px] border-r-transparent border-b-[70px] border-b-[#C9A23A]"
         />
         {/* Right side line accent */}
         <motion.div
           initial={{ scaleY: 0 }}
           animate={{ scaleY: 1 }}
           transition={{ duration: 0.8, delay: 0.9 }}
-          className="absolute top-1/4 right-20 w-1 h-32 bg-gradient-to-b from-[#D4AF37] to-transparent rounded-full origin-top opacity-20"
+          className="absolute top-1/4 right-20 w-1 h-32 bg-gradient-to-b from-[#C9A23A] to-transparent rounded-full origin-top opacity-20"
         />
       </div>
 
@@ -97,12 +97,12 @@ export default function Home() {
             initial={{ opacity: 0, scaleX: 0 }}
             animate={{ opacity: 1, scaleX: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-32 h-1 mx-auto mb-6 rounded-full overflow-hidden bg-gradient-to-r from-transparent via-[#8B7355] to-transparent"
+            className="w-32 h-1 mx-auto mb-6 rounded-full overflow-hidden bg-gradient-to-r from-transparent via-[#C9A23A] to-transparent"
           >
             <motion.div
               animate={{ x: ["-100%", "200%"] }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-full h-full bg-gradient-to-r from-transparent via-[#C4A77D] to-transparent"
+              className="w-full h-full bg-gradient-to-r from-transparent via-[#E0BC4D] to-transparent"
             />
           </motion.div>
           
@@ -110,14 +110,14 @@ export default function Home() {
             Create, Upload & Monetize
           </h1>
           <p className="text-lg text-[var(--foreground)]/70 mb-8 max-w-xl mx-auto">
-            Connect with your audience and grow your brand with VELT's billboard ecosystem.
+            Connect with your audience and grow your lifestyle with Velt's ecosystem.
           </p>
           
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
             <Link 
               href="/WaitList" 
-              className="px-6 py-3 rounded-full font-medium text-center transition-all hover:opacity-80 bg-[#8B7355] text-white"
+              className="px-6 py-3 rounded-full font-medium text-center transition-all hover:opacity-80 bg-[#C9A23A] text-white"
             >
               Get Started
             </Link>
@@ -183,7 +183,7 @@ export default function Home() {
           <p className="text-[var(--foreground)]/60 mb-6">Join thousands of creators on VELT.</p>
           <Link 
             href="/WaitList"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold transition-all hover:opacity-80 bg-[#8B7355] text-white"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold transition-all hover:opacity-80 bg-[#C9A23A] text-white"
           >
             Join Waitlist
           </Link>
