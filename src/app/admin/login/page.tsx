@@ -30,7 +30,26 @@ export default function AdminLoginPage() {
       }
 
       if (data.session) {
-        // Redirect to admin dashboard
+        // Check if user is admin in profiles table
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (profileError) {
+          setError('Unable to verify admin status. Please try again.');
+          await supabase.auth.signOut();
+          return;
+        }
+
+        if (!profile?.is_admin) {
+          setError('Access denied. You do not have admin privileges.');
+          await supabase.auth.signOut();
+          return;
+        }
+
+        // User is admin, redirect to dashboard
         router.push('/admin');
       }
     } catch {

@@ -16,9 +16,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/admin/login');
-    } else {
-      setIsAuthenticated(true);
+      setIsLoading(false);
+      return;
     }
+
+    // Verify admin status from profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profileError || !profile?.is_admin) {
+      // Not an admin, sign out and redirect to login
+      await supabase.auth.signOut();
+      router.push('/admin/login');
+      setIsLoading(false);
+      return;
+    }
+
+    setIsAuthenticated(true);
     setIsLoading(false);
   }, [router]);
 
