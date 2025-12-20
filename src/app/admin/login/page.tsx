@@ -51,6 +51,7 @@ export default function AdminLoginPage() {
 
         // User is admin, redirect to dashboard
         router.push('/admin');
+        router.refresh();
       }
     } catch {
       setError('An unexpected error occurred. Please try again.');

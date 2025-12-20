@@ -13,35 +13,65 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const checkAuth = React.useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      router.push('/admin/login');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push('/admin/login');
+        setIsLoading(false);
+        return;
+      }
+
+      // Verify admin status from profiles table
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        // If profile doesn't exist or error, still deny access
+        await supabase.auth.signOut();
+        router.push('/admin/login');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profile?.is_admin) {
+        // Not an admin, sign out and redirect to login
+        await supabase.auth.signOut();
+        router.push('/admin/login');
+        setIsLoading(false);
+        return;
+      }
+
+      setIsAuthenticated(true);
       setIsLoading(false);
-      return;
-    }
-
-    // Verify admin status from profiles table
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', session.user.id)
-      .single();
-
-    if (profileError || !profile?.is_admin) {
-      // Not an admin, sign out and redirect to login
-      await supabase.auth.signOut();
-      router.push('/admin/login');
+    } catch (error) {
+      console.error('Auth check error:', error);
       setIsLoading(false);
-      return;
+      router.push('/admin/login');
     }
-
-    setIsAuthenticated(true);
-    setIsLoading(false);
   }, [router]);
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        checkAuth();
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+        router.push('/admin/login');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [checkAuth, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
