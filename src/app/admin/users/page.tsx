@@ -142,62 +142,62 @@ export default function AdminUsersPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-bold">Users</h2>
-          <p className="text-gray-400">Billboard advertisers and their activity</p>
+          <p className="text-white/40">Billboard advertisers and their activity</p>
         </div>
         
         {/* Search */}
         <div className="relative w-full md:w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-500" />
+            <FaSearch className="text-white/30" />
           </div>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search users..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white focus:border-gray-600 focus:outline-none"
+            className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg pl-10 pr-4 py-2 text-white focus:border-[#D4AF37]/50 focus:outline-none placeholder:text-white/30"
           />
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-sm">Total Users</p>
+        <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-white/40 text-sm">Total Users</p>
           <p className="text-2xl font-bold mt-1">{isLoading ? '-' : stats.total}</p>
         </div>
-        <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-sm">Active Advertisers</p>
+        <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-white/40 text-sm">Active Advertisers</p>
           <p className="text-2xl font-bold mt-1 text-green-500">{isLoading ? '-' : stats.active}</p>
         </div>
-        <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-sm">Total Bookings</p>
+        <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-white/40 text-sm">Total Bookings</p>
           <p className="text-2xl font-bold mt-1 text-blue-500">{isLoading ? '-' : stats.totalBookings}</p>
         </div>
-        <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-sm">Total Revenue</p>
+        <div className="bg-white/[0.02] rounded-xl p-4 border border-white/[0.04]">
+          <p className="text-white/40 text-sm">Total Revenue</p>
           <p className="text-2xl font-bold mt-1 text-[#D4AF37]">GHS {isLoading ? '-' : formatCurrency(stats.totalRevenue)}</p>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-white/[0.02] rounded-xl border border-white/[0.04] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-700/50">
+            <thead className="bg-white/[0.02]">
               <tr>
-                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-gray-300">User</th>
-                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-gray-300 hidden md:table-cell">Joined</th>
-                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-gray-300">Bookings</th>
-                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-gray-300 hidden sm:table-cell">Media</th>
-                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-gray-300 hidden lg:table-cell">Total Spent</th>
-                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-gray-300">Actions</th>
+                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-white/50">User</th>
+                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-white/50 hidden md:table-cell">Joined</th>
+                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-white/50">Bookings</th>
+                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-white/50 hidden sm:table-cell">Media</th>
+                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-white/50 hidden lg:table-cell">Total Spent</th>
+                <th className="text-left px-4 md:px-6 py-4 text-sm font-semibold text-white/50">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody className="divide-y divide-white/[0.04]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                  <td colSpan={6} className="px-6 py-8 text-center text-white/40">
                     <div className="flex items-center justify-center gap-3">
                       <div className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></div>
                       Loading users...
@@ -206,13 +206,13 @@ export default function AdminUsersPage() {
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                  <td colSpan={6} className="px-6 py-8 text-center text-white/40">
                     No users found
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-700/30 transition">
+                  <tr key={user.id} className="hover:bg-white/[0.02] transition">
                     <td className="px-4 md:px-6 py-4">
                       <div className="flex items-center gap-3">
                         {user.avatar_url ? (
@@ -222,17 +222,17 @@ export default function AdminUsersPage() {
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
-                            <FaUser className="text-gray-400" />
+                          <div className="w-10 h-10 rounded-full bg-white/[0.04] flex items-center justify-center">
+                            <FaUser className="text-white/40" />
                           </div>
                         )}
                         <div className="min-w-0">
                           <p className="font-medium truncate">{user.full_name || 'Unknown'}</p>
-                          <p className="text-sm text-gray-400 truncate">{user.email}</p>
+                          <p className="text-sm text-white/40 truncate">{user.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 md:px-6 py-4 text-gray-400 hidden md:table-cell">
+                    <td className="px-4 md:px-6 py-4 text-white/40 hidden md:table-cell">
                       {formatDate(user.created_at)}
                     </td>
                     <td className="px-4 md:px-6 py-4">
@@ -251,7 +251,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 md:px-6 py-4">
                       <button
                         onClick={() => viewUserDetails(user)}
-                        className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition"
+                        className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition"
                         title="View Details"
                       >
                         <FaChartBar className="w-4 h-4" />
@@ -267,14 +267,14 @@ export default function AdminUsersPage() {
 
       {/* User Detail Modal */}
       {showModal && selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="bg-gray-800 rounded-2xl w-full max-w-lg border border-gray-700 max-h-[90vh] overflow-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-black rounded-2xl w-full max-w-lg border border-white/[0.06] max-h-[90vh] overflow-auto">
             {/* Header */}
-            <div className="p-6 border-b border-gray-700 flex justify-between items-center sticky top-0 bg-gray-800">
+            <div className="p-6 border-b border-white/[0.06] flex justify-between items-center sticky top-0 bg-black">
               <h3 className="text-lg font-bold">User Details</h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-white transition"
+                className="text-white/40 hover:text-white transition"
               >
                 <FaTimes className="w-5 h-5" />
               </button>
@@ -291,13 +291,13 @@ export default function AdminUsersPage() {
                     className="w-16 h-16 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center">
-                    <FaUser className="text-2xl text-gray-400" />
+                  <div className="w-16 h-16 rounded-full bg-white/[0.04] flex items-center justify-center">
+                    <FaUser className="text-2xl text-white/40" />
                   </div>
                 )}
                 <div>
                   <h4 className="text-xl font-bold">{selectedUser.full_name || 'Unknown'}</h4>
-                  <p className="text-gray-400 flex items-center gap-2 mt-1">
+                  <p className="text-white/40 flex items-center gap-2 mt-1">
                     <FaEnvelope className="text-sm" />
                     {selectedUser.email}
                   </p>
@@ -305,39 +305,39 @@ export default function AdminUsersPage() {
               </div>
 
               {/* Joined Date */}
-              <div className="flex items-center gap-3 text-gray-400">
+              <div className="flex items-center gap-3 text-white/40">
                 <FaCalendar />
                 <span>Joined {formatDate(selectedUser.created_at)}</span>
               </div>
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-gray-700/50 rounded-xl p-4 text-center">
+                <div className="bg-white/[0.02] rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-blue-500">{selectedUser.stats.bookings}</p>
-                  <p className="text-sm text-gray-400">Bookings</p>
+                  <p className="text-sm text-white/40">Bookings</p>
                 </div>
-                <div className="bg-gray-700/50 rounded-xl p-4 text-center">
+                <div className="bg-white/[0.02] rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-purple-500">{selectedUser.stats.media}</p>
-                  <p className="text-sm text-gray-400">Media</p>
+                  <p className="text-sm text-white/40">Media</p>
                 </div>
-                <div className="bg-gray-700/50 rounded-xl p-4 text-center">
+                <div className="bg-white/[0.02] rounded-xl p-4 text-center">
                   <p className="text-2xl font-bold text-[#D4AF37]">GHS {formatCurrency(selectedUser.stats.spent)}</p>
-                  <p className="text-sm text-gray-400">Spent</p>
+                  <p className="text-sm text-white/40">Spent</p>
                 </div>
               </div>
 
               {/* User ID */}
-              <div className="p-4 bg-gray-700/30 rounded-xl">
-                <p className="text-sm text-gray-400">User ID</p>
+              <div className="p-4 bg-white/[0.02] rounded-xl">
+                <p className="text-sm text-white/40">User ID</p>
                 <p className="text-sm font-mono mt-1 break-all">{selectedUser.id}</p>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-700">
+            <div className="p-6 border-t border-white/[0.06]">
               <button
                 onClick={() => setShowModal(false)}
-                className="w-full py-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition font-medium"
+                className="w-full py-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] transition font-medium"
               >
                 Close
               </button>

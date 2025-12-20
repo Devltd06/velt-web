@@ -18,6 +18,7 @@ export default function WaitlistForm({
 }: WaitlistFormProps) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -41,6 +42,7 @@ export default function WaitlistForm({
       const response = await waitlistService.subscribe(
         email,
         name || undefined,
+        phone || undefined,
         ["billboard", "sharing", "creating"]
       );
 
@@ -54,6 +56,7 @@ export default function WaitlistForm({
         setMessage("Welcome to the waitlist! Check your email soon.");
         setEmail("");
         setName("");
+        setPhone("");
         onSuccess?.();
       }
     } catch (error) {
@@ -85,6 +88,23 @@ export default function WaitlistForm({
               placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-lg focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
+              disabled={loading}
+            />
+          </motion.div>
+        )}
+
+        {showName && (
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.12 }}
+          >
+            <input
+              type="tel"
+              placeholder="Phone number (e.g. 0241234567)"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-lg focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
               disabled={loading}
             />

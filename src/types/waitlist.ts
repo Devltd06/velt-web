@@ -2,6 +2,7 @@ export interface WaitlistEntry {
   id?: string;
   email: string;
   full_name?: string;
+  phone_number?: string;
   interests?: string[];
   status?: 'pending' | 'confirmed' | 'joined';
   created_at?: string;

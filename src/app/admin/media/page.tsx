@@ -3,17 +3,28 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FaTimes, FaEye, FaImage, FaVideo } from 'react-icons/fa';
 
+interface UserProfile {
+  id: string;
+  full_name?: string;
+  avatar_url?: string;
+  email?: string;
+}
+
 interface MediaItem {
   id: string;
   user_id: string;
-  user_email?: string;
-  file_url: string;
-  file_type: string;
-  file_name: string;
-  status: string;
-  rejection_reason?: string;
+  title: string;
+  description?: string;
+  media_type: string;
+  media_url: string;
+  thumbnail_url?: string;
+  duration_seconds?: number;
+  file_size_bytes?: number;
+  width?: number;
+  height?: number;
+  is_approved: boolean | null;
   created_at: string;
-  booking_id?: string;
+  profiles?: UserProfile;
 }
 
 export default function AdminMediaPage() {
@@ -31,11 +42,19 @@ export default function AdminMediaPage() {
     fetchMedia();
   }, []);
 
+  // Helper function to determine media status from is_approved
+  // Note: is_approved defaults to true in DB, so false means rejected, null/undefined means pending
+  const getMediaStatus = (item: MediaItem): string => {
+    if (item.is_approved === true) return 'approved';
+    if (item.is_approved === false) return 'rejected';
+    return 'pending';
+  };
+
   const filterMedia = React.useCallback(() => {
     if (currentFilter === 'all') {
       setFilteredMedia(media);
     } else {
-      setFilteredMedia(media.filter(m => m.status === currentFilter));
+      setFilteredMedia(media.filter(m => getMediaStatus(m) === currentFilter));
     }
   }, [media, currentFilter]);
 
@@ -47,7 +66,10 @@ export default function AdminMediaPage() {
     try {
       const { data, error } = await supabase
         .from('billboard_media')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (id, full_name, avatar_url, email)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -56,7 +78,7 @@ export default function AdminMediaPage() {
       }
 
       setMedia(data || []);
-      setPendingCount((data || []).filter(m => m.status === 'pending').length);
+      setPendingCount((data || []).filter(m => m.is_approved === null || m.is_approved === undefined).length);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -66,20 +88,32 @@ export default function AdminMediaPage() {
 
   const handleApprove = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('billboard_media')
-        .update({ status: 'approved' })
-        .eq('id', id);
+        .update({ is_approved: true })
+        .eq('id', id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        alert(`Failed to approve media: ${error.message}`);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        console.error('No rows updated - RLS policy may be blocking the update');
+        alert('Failed to approve media. You may not have permission to approve this item. Please check RLS policies.');
+        return;
+      }
 
       setMedia(prev =>
-        prev.map(m => m.id === id ? { ...m, status: 'approved' } : m)
+        prev.map(m => m.id === id ? { ...m, is_approved: true } : m)
       );
       setPendingCount(prev => Math.max(0, prev - 1));
       setShowModal(false);
     } catch (error) {
       console.error('Error approving media:', error);
+      alert('An error occurred while approving the media.');
     }
   };
 
@@ -87,15 +121,26 @@ export default function AdminMediaPage() {
     if (!selectedMedia) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('billboard_media')
-        .update({ status: 'rejected', rejection_reason: rejectionReason })
-        .eq('id', selectedMedia.id);
+        .update({ is_approved: false })
+        .eq('id', selectedMedia.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        alert(`Failed to reject media: ${error.message}`);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        console.error('No rows updated - RLS policy may be blocking the update');
+        alert('Failed to reject media. You may not have permission. Please check RLS policies.');
+        return;
+      }
 
       setMedia(prev =>
-        prev.map(m => m.id === selectedMedia.id ? { ...m, status: 'rejected', rejection_reason: rejectionReason } : m)
+        prev.map(m => m.id === selectedMedia.id ? { ...m, is_approved: false } : m)
       );
       setPendingCount(prev => Math.max(0, prev - 1));
       setShowRejectModal(false);
@@ -103,10 +148,12 @@ export default function AdminMediaPage() {
       setRejectionReason('');
     } catch (error) {
       console.error('Error rejecting media:', error);
+      alert('An error occurred while rejecting the media.');
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (item: MediaItem) => {
+    const status = getMediaStatus(item);
     const styles: Record<string, string> = {
       pending: 'bg-orange-500/15 text-orange-500',
       approved: 'bg-green-500/15 text-green-500',
@@ -115,8 +162,8 @@ export default function AdminMediaPage() {
     return styles[status] || 'bg-gray-500/15 text-gray-500';
   };
 
-  const isVideo = (fileType: string) => {
-    return fileType?.startsWith('video/') || fileType?.includes('video');
+  const isVideo = (mediaType: string) => {
+    return mediaType === 'video' || mediaType?.startsWith('video/') || mediaType?.includes('video');
   };
 
   const filters = [
@@ -132,7 +179,7 @@ export default function AdminMediaPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
         <div>
           <h2 className="text-2xl font-bold">Media Library</h2>
-          <p className="text-gray-400">Review and manage uploaded billboard media</p>
+          <p className="text-white/40">Review and manage uploaded billboard media</p>
         </div>
       </div>
 
@@ -145,7 +192,7 @@ export default function AdminMediaPage() {
             className={`px-3 md:px-4 py-2 rounded-lg border transition text-sm md:text-base ${
               currentFilter === filter.key
                 ? 'bg-[#D4AF37] text-black border-[#D4AF37]'
-                : 'bg-gray-800 border-gray-700 hover:border-gray-600'
+                : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12]'
             }`}
           >
             {filter.label}
@@ -159,11 +206,11 @@ export default function AdminMediaPage() {
       {/* Media Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {isLoading ? (
-          <div className="col-span-full text-center text-gray-400 py-12">
+          <div className="col-span-full text-center text-white/40 py-12">
             Loading...
           </div>
         ) : filteredMedia.length === 0 ? (
-          <div className="col-span-full text-center text-gray-400 py-12">
+          <div className="col-span-full text-center text-white/40 py-12">
             <FaImage className="mx-auto text-5xl mb-4 opacity-50" />
             <p>No media found</p>
           </div>
@@ -171,31 +218,30 @@ export default function AdminMediaPage() {
           filteredMedia.map((item) => (
             <div
               key={item.id}
-              className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-600 transition transform hover:-translate-y-1 hover:shadow-xl"
-            >
+              className="bg-white/[0.02] rounded-xl border border-white/[0.04] overflow-hidden hover:border-white/[0.1] transition transform hover:-translate-y-1 hover:shadow-xl">
               {/* Media Preview */}
               <div 
-                className="aspect-video bg-gray-900 relative cursor-pointer group"
+                className="aspect-video bg-black relative cursor-pointer group"
                 onClick={() => {
                   setSelectedMedia(item);
                   setShowModal(true);
                 }}
               >
-                {item.file_url ? (
-                  isVideo(item.file_type) ? (
+                {item.media_url ? (
+                  isVideo(item.media_type) ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <FaVideo className="text-4xl text-gray-600" />
+                      <FaVideo className="text-4xl text-white/20" />
                     </div>
                   ) : (
                     <img
-                      src={item.file_url}
-                      alt={item.file_name}
+                      src={item.thumbnail_url || item.media_url}
+                      alt={item.title}
                       className="w-full h-full object-cover"
                     />
                   )
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <FaImage className="text-4xl text-gray-600" />
+                    <FaImage className="text-4xl text-white/20" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
@@ -206,18 +252,20 @@ export default function AdminMediaPage() {
               {/* Media Info */}
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium truncate flex-1">{item.file_name || 'Unnamed'}</p>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ml-2 ${getStatusBadge(item.status)}`}>
-                    {item.status}
+                  <p className="font-medium truncate flex-1">{item.title || 'Unnamed'}</p>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ml-2 ${getStatusBadge(item)}`}>
+                    {getMediaStatus(item)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400 truncate">{item.user_email || 'Unknown user'}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-sm text-white/40 truncate">
+                  {item.profiles?.full_name || item.profiles?.email || 'Unknown user'}
+                </p>
+                <p className="text-xs text-white/30 mt-1">
                   {new Date(item.created_at).toLocaleDateString()}
                 </p>
 
                 {/* Quick Actions */}
-                {item.status === 'pending' && (
+                {getMediaStatus(item) === 'pending' && (
                   <div className="flex gap-2 mt-4">
                     <button
                       onClick={(e) => {
@@ -248,37 +296,37 @@ export default function AdminMediaPage() {
 
       {/* Media Preview Modal */}
       {showModal && selectedMedia && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-          <div className="bg-gray-800 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-auto border border-gray-700">
-            <div className="p-6 border-b border-gray-700 flex justify-between items-center sticky top-0 bg-gray-800 z-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-black rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-auto border border-white/[0.06]">
+            <div className="p-6 border-b border-white/[0.06] flex justify-between items-center sticky top-0 bg-black z-10">
               <h3 className="text-lg font-bold">Media Details</h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-white/40 hover:text-white"
               >
                 <FaTimes className="w-6 h-6" />
               </button>
             </div>
             <div className="p-6">
               {/* Preview */}
-              <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden mb-6">
-                {selectedMedia.file_url ? (
-                  isVideo(selectedMedia.file_type) ? (
+              <div className="aspect-video bg-white/[0.02] rounded-lg overflow-hidden mb-6">
+                {selectedMedia.media_url ? (
+                  isVideo(selectedMedia.media_type) ? (
                     <video
-                      src={selectedMedia.file_url}
+                      src={selectedMedia.media_url}
                       controls
                       className="w-full h-full object-contain"
                     />
                   ) : (
                     <img
-                      src={selectedMedia.file_url}
-                      alt={selectedMedia.file_name}
+                      src={selectedMedia.media_url}
+                      alt={selectedMedia.title}
                       className="w-full h-full object-contain"
                     />
                   )
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <FaImage className="text-5xl text-gray-600" />
+                    <FaImage className="text-5xl text-white/20" />
                   </div>
                 )}
               </div>
@@ -286,39 +334,38 @@ export default function AdminMediaPage() {
               {/* Details */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <p className="text-sm text-gray-400">File Name</p>
-                  <p className="font-medium">{selectedMedia.file_name || 'Unnamed'}</p>
+                  <p className="text-sm text-white/40">Title</p>
+                  <p className="font-medium">{selectedMedia.title || 'Unnamed'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">Status</p>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 ${getStatusBadge(selectedMedia.status)}`}>
-                    {selectedMedia.status}
+                  <p className="text-sm text-white/40">Status</p>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 ${getStatusBadge(selectedMedia)}`}>
+                    {getMediaStatus(selectedMedia)}
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">File Type</p>
-                  <p className="font-medium">{selectedMedia.file_type || 'Unknown'}</p>
+                  <p className="text-sm text-white/40">Media Type</p>
+                  <p className="font-medium">{selectedMedia.media_type === 'video' ? '🎬 Video' : '🖼️ Image'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">Uploaded By</p>
-                  <p className="font-medium">{selectedMedia.user_email || 'Unknown'}</p>
+                  <p className="text-sm text-white/40">Uploaded By</p>
+                  <p className="font-medium">{selectedMedia.profiles?.full_name || selectedMedia.profiles?.email || 'Unknown'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">Upload Date</p>
+                  <p className="text-sm text-white/40">Upload Date</p>
                   <p className="font-medium">{new Date(selectedMedia.created_at).toLocaleString()}</p>
                 </div>
+                {selectedMedia.description && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-white/40">Description</p>
+                    <p className="font-medium">{selectedMedia.description}</p>
+                  </div>
+                )}
               </div>
 
-              {selectedMedia.rejection_reason && (
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 mb-6">
-                  <p className="text-sm text-red-400 font-medium mb-1">Rejection Reason</p>
-                  <p className="text-gray-300">{selectedMedia.rejection_reason}</p>
-                </div>
-              )}
-
               {/* Actions */}
-              {selectedMedia.status === 'pending' && (
-                <div className="flex gap-4 pt-4 border-t border-gray-700">
+              {getMediaStatus(selectedMedia) === 'pending' && (
+                <div className="flex gap-4 pt-4 border-t border-white/[0.06]">
                   <button
                     onClick={() => handleApprove(selectedMedia.id)}
                     className="flex-1 py-3 rounded-lg bg-green-600 hover:bg-green-700 transition font-semibold"
@@ -340,19 +387,19 @@ export default function AdminMediaPage() {
 
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80">
-          <div className="bg-gray-800 rounded-2xl w-full max-w-md border border-gray-700">
-            <div className="p-6 border-b border-gray-700">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-black rounded-2xl w-full max-w-md border border-white/[0.06]">
+            <div className="p-6 border-b border-white/[0.06]">
               <h3 className="text-lg font-bold">Reject Media</h3>
             </div>
             <div className="p-6">
-              <label className="block text-sm text-gray-400 mb-2">
+              <label className="block text-sm text-white/40 mb-2">
                 Reason for rejection
               </label>
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white resize-none focus:border-[#D4AF37] focus:outline-none"
+                className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg p-3 text-white resize-none focus:border-[#D4AF37]/50 focus:outline-none"
                 rows={4}
                 placeholder="Enter the reason for rejecting this media..."
               />
@@ -362,7 +409,7 @@ export default function AdminMediaPage() {
                     setShowRejectModal(false);
                     setRejectionReason('');
                   }}
-                  className="flex-1 px-4 py-3 rounded-lg border border-gray-600 hover:bg-gray-700 transition"
+                  className="flex-1 px-4 py-3 rounded-lg border border-white/[0.1] hover:bg-white/[0.04] transition"
                 >
                   Cancel
                 </button>

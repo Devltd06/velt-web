@@ -1,11 +1,155 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { waitlistService } from "@/lib/waitlistService";
-import { FaEnvelope, FaCheckCircle, FaExclamationCircle, FaArrowLeft, FaRocket, FaGift, FaUsers, FaMobile } from "react-icons/fa";
+import { FaEnvelope, FaCheckCircle, FaExclamationCircle, FaArrowLeft, FaRocket, FaGift, FaUsers, FaMobile, FaPhone } from "react-icons/fa";
 import { motion } from "framer-motion";
 import VeltLogo from "@/components/VeltLogo";
+
+// Country codes with flags - organized by region
+const countryCodes = [
+  // Africa
+  { code: "+233", country: "GH", flag: "🇬🇭", name: "Ghana" },
+  { code: "+234", country: "NG", flag: "🇳🇬", name: "Nigeria" },
+  { code: "+254", country: "KE", flag: "🇰🇪", name: "Kenya" },
+  { code: "+27", country: "ZA", flag: "🇿🇦", name: "South Africa" },
+  { code: "+20", country: "EG", flag: "🇪🇬", name: "Egypt" },
+  { code: "+212", country: "MA", flag: "🇲🇦", name: "Morocco" },
+  { code: "+213", country: "DZ", flag: "🇩🇿", name: "Algeria" },
+  { code: "+216", country: "TN", flag: "🇹🇳", name: "Tunisia" },
+  { code: "+218", country: "LY", flag: "🇱🇾", name: "Libya" },
+  { code: "+221", country: "SN", flag: "🇸🇳", name: "Senegal" },
+  { code: "+223", country: "ML", flag: "🇲🇱", name: "Mali" },
+  { code: "+224", country: "GN", flag: "🇬🇳", name: "Guinea" },
+  { code: "+225", country: "CI", flag: "🇨🇮", name: "Ivory Coast" },
+  { code: "+226", country: "BF", flag: "🇧🇫", name: "Burkina Faso" },
+  { code: "+227", country: "NE", flag: "🇳🇪", name: "Niger" },
+  { code: "+228", country: "TG", flag: "🇹🇬", name: "Togo" },
+  { code: "+229", country: "BJ", flag: "🇧🇯", name: "Benin" },
+  { code: "+230", country: "MU", flag: "🇲🇺", name: "Mauritius" },
+  { code: "+231", country: "LR", flag: "🇱🇷", name: "Liberia" },
+  { code: "+232", country: "SL", flag: "🇸🇱", name: "Sierra Leone" },
+  { code: "+235", country: "TD", flag: "🇹🇩", name: "Chad" },
+  { code: "+236", country: "CF", flag: "🇨🇫", name: "Central African Republic" },
+  { code: "+237", country: "CM", flag: "🇨🇲", name: "Cameroon" },
+  { code: "+238", country: "CV", flag: "🇨🇻", name: "Cape Verde" },
+  { code: "+239", country: "ST", flag: "🇸🇹", name: "São Tomé and Príncipe" },
+  { code: "+240", country: "GQ", flag: "🇬🇶", name: "Equatorial Guinea" },
+  { code: "+241", country: "GA", flag: "🇬🇦", name: "Gabon" },
+  { code: "+242", country: "CG", flag: "🇨🇬", name: "Congo" },
+  { code: "+243", country: "CD", flag: "🇨🇩", name: "DR Congo" },
+  { code: "+244", country: "AO", flag: "🇦🇴", name: "Angola" },
+  { code: "+245", country: "GW", flag: "🇬🇼", name: "Guinea-Bissau" },
+  { code: "+248", country: "SC", flag: "🇸🇨", name: "Seychelles" },
+  { code: "+249", country: "SD", flag: "🇸🇩", name: "Sudan" },
+  { code: "+250", country: "RW", flag: "🇷🇼", name: "Rwanda" },
+  { code: "+251", country: "ET", flag: "🇪🇹", name: "Ethiopia" },
+  { code: "+252", country: "SO", flag: "🇸🇴", name: "Somalia" },
+  { code: "+253", country: "DJ", flag: "🇩🇯", name: "Djibouti" },
+  { code: "+255", country: "TZ", flag: "🇹🇿", name: "Tanzania" },
+  { code: "+256", country: "UG", flag: "🇺🇬", name: "Uganda" },
+  { code: "+257", country: "BI", flag: "🇧🇮", name: "Burundi" },
+  { code: "+258", country: "MZ", flag: "🇲🇿", name: "Mozambique" },
+  { code: "+260", country: "ZM", flag: "🇿🇲", name: "Zambia" },
+  { code: "+261", country: "MG", flag: "🇲🇬", name: "Madagascar" },
+  { code: "+263", country: "ZW", flag: "🇿🇼", name: "Zimbabwe" },
+  { code: "+264", country: "NA", flag: "🇳🇦", name: "Namibia" },
+  { code: "+265", country: "MW", flag: "🇲🇼", name: "Malawi" },
+  { code: "+266", country: "LS", flag: "🇱🇸", name: "Lesotho" },
+  { code: "+267", country: "BW", flag: "🇧🇼", name: "Botswana" },
+  { code: "+268", country: "SZ", flag: "🇸🇿", name: "Eswatini" },
+  { code: "+269", country: "KM", flag: "🇰🇲", name: "Comoros" },
+  { code: "+291", country: "ER", flag: "🇪🇷", name: "Eritrea" },
+  { code: "+297", country: "AW", flag: "🇦🇼", name: "Aruba" },
+  // Europe
+  { code: "+44", country: "GB", flag: "🇬🇧", name: "United Kingdom" },
+  { code: "+49", country: "DE", flag: "🇩🇪", name: "Germany" },
+  { code: "+33", country: "FR", flag: "🇫🇷", name: "France" },
+  { code: "+34", country: "ES", flag: "🇪🇸", name: "Spain" },
+  { code: "+39", country: "IT", flag: "🇮🇹", name: "Italy" },
+  { code: "+31", country: "NL", flag: "🇳🇱", name: "Netherlands" },
+  { code: "+32", country: "BE", flag: "🇧🇪", name: "Belgium" },
+  { code: "+41", country: "CH", flag: "🇨🇭", name: "Switzerland" },
+  { code: "+43", country: "AT", flag: "🇦🇹", name: "Austria" },
+  { code: "+45", country: "DK", flag: "🇩🇰", name: "Denmark" },
+  { code: "+46", country: "SE", flag: "🇸🇪", name: "Sweden" },
+  { code: "+47", country: "NO", flag: "🇳🇴", name: "Norway" },
+  { code: "+48", country: "PL", flag: "🇵🇱", name: "Poland" },
+  { code: "+351", country: "PT", flag: "🇵🇹", name: "Portugal" },
+  { code: "+353", country: "IE", flag: "🇮🇪", name: "Ireland" },
+  { code: "+358", country: "FI", flag: "🇫🇮", name: "Finland" },
+  { code: "+30", country: "GR", flag: "🇬🇷", name: "Greece" },
+  { code: "+380", country: "UA", flag: "🇺🇦", name: "Ukraine" },
+  { code: "+7", country: "RU", flag: "🇷🇺", name: "Russia" },
+  { code: "+90", country: "TR", flag: "🇹🇷", name: "Turkey" },
+  // North America
+  { code: "+1", country: "US", flag: "🇺🇸", name: "United States" },
+  { code: "+1", country: "CA", flag: "🇨🇦", name: "Canada" },
+  { code: "+52", country: "MX", flag: "🇲🇽", name: "Mexico" },
+  // Central America & Caribbean
+  { code: "+501", country: "BZ", flag: "🇧🇿", name: "Belize" },
+  { code: "+502", country: "GT", flag: "🇬🇹", name: "Guatemala" },
+  { code: "+503", country: "SV", flag: "🇸🇻", name: "El Salvador" },
+  { code: "+504", country: "HN", flag: "🇭🇳", name: "Honduras" },
+  { code: "+505", country: "NI", flag: "🇳🇮", name: "Nicaragua" },
+  { code: "+506", country: "CR", flag: "🇨🇷", name: "Costa Rica" },
+  { code: "+507", country: "PA", flag: "🇵🇦", name: "Panama" },
+  { code: "+509", country: "HT", flag: "🇭🇹", name: "Haiti" },
+  { code: "+1876", country: "JM", flag: "🇯🇲", name: "Jamaica" },
+  { code: "+1868", country: "TT", flag: "🇹🇹", name: "Trinidad and Tobago" },
+  // South America
+  { code: "+55", country: "BR", flag: "🇧🇷", name: "Brazil" },
+  { code: "+54", country: "AR", flag: "🇦🇷", name: "Argentina" },
+  { code: "+56", country: "CL", flag: "🇨🇱", name: "Chile" },
+  { code: "+57", country: "CO", flag: "🇨🇴", name: "Colombia" },
+  { code: "+58", country: "VE", flag: "🇻🇪", name: "Venezuela" },
+  { code: "+51", country: "PE", flag: "🇵🇪", name: "Peru" },
+  { code: "+593", country: "EC", flag: "🇪🇨", name: "Ecuador" },
+  { code: "+591", country: "BO", flag: "🇧🇴", name: "Bolivia" },
+  { code: "+595", country: "PY", flag: "🇵🇾", name: "Paraguay" },
+  { code: "+598", country: "UY", flag: "🇺🇾", name: "Uruguay" },
+  // Asia
+  { code: "+91", country: "IN", flag: "🇮🇳", name: "India" },
+  { code: "+86", country: "CN", flag: "🇨🇳", name: "China" },
+  { code: "+81", country: "JP", flag: "🇯🇵", name: "Japan" },
+  { code: "+82", country: "KR", flag: "🇰🇷", name: "South Korea" },
+  { code: "+65", country: "SG", flag: "🇸🇬", name: "Singapore" },
+  { code: "+60", country: "MY", flag: "🇲🇾", name: "Malaysia" },
+  { code: "+62", country: "ID", flag: "🇮🇩", name: "Indonesia" },
+  { code: "+63", country: "PH", flag: "🇵🇭", name: "Philippines" },
+  { code: "+66", country: "TH", flag: "🇹🇭", name: "Thailand" },
+  { code: "+84", country: "VN", flag: "🇻🇳", name: "Vietnam" },
+  { code: "+92", country: "PK", flag: "🇵🇰", name: "Pakistan" },
+  { code: "+880", country: "BD", flag: "🇧🇩", name: "Bangladesh" },
+  { code: "+94", country: "LK", flag: "🇱🇰", name: "Sri Lanka" },
+  { code: "+977", country: "NP", flag: "🇳🇵", name: "Nepal" },
+  // Middle East
+  { code: "+971", country: "AE", flag: "🇦🇪", name: "UAE" },
+  { code: "+966", country: "SA", flag: "🇸🇦", name: "Saudi Arabia" },
+  { code: "+974", country: "QA", flag: "🇶🇦", name: "Qatar" },
+  { code: "+973", country: "BH", flag: "🇧🇭", name: "Bahrain" },
+  { code: "+968", country: "OM", flag: "🇴🇲", name: "Oman" },
+  { code: "+965", country: "KW", flag: "🇰🇼", name: "Kuwait" },
+  { code: "+962", country: "JO", flag: "🇯🇴", name: "Jordan" },
+  { code: "+961", country: "LB", flag: "🇱🇧", name: "Lebanon" },
+  { code: "+972", country: "IL", flag: "🇮🇱", name: "Israel" },
+  { code: "+98", country: "IR", flag: "🇮🇷", name: "Iran" },
+  { code: "+964", country: "IQ", flag: "🇮🇶", name: "Iraq" },
+  // Oceania
+  { code: "+61", country: "AU", flag: "🇦🇺", name: "Australia" },
+  { code: "+64", country: "NZ", flag: "🇳🇿", name: "New Zealand" },
+  { code: "+679", country: "FJ", flag: "🇫🇯", name: "Fiji" },
+  { code: "+675", country: "PG", flag: "🇵🇬", name: "Papua New Guinea" },
+];
+
+// Map browser locale to country code
+const localeToCountry: Record<string, string> = {
+  "en-GH": "+233", "en-NG": "+234", "en-KE": "+254", "en-ZA": "+27",
+  "en-US": "+1", "en-GB": "+44", "de-DE": "+49", "fr-FR": "+33",
+  "ar-AE": "+971", "hi-IN": "+91", "en-IN": "+91", "zh-CN": "+86",
+  "ja-JP": "+81", "en-AU": "+61", "pt-BR": "+55", "ar-EG": "+20",
+};
 
 const benefits = [
   { icon: FaRocket, title: "Early Access", description: "Be the first to experience new features before anyone else" },
@@ -15,9 +159,31 @@ const benefits = [
 export default function WaitlistPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("+233"); // Default to Ghana
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+
+  // Auto-detect country code based on browser locale
+  useEffect(() => {
+    try {
+      const locale = navigator.language || (navigator as Navigator & { userLanguage?: string }).userLanguage;
+      if (locale && localeToCountry[locale]) {
+        setCountryCode(localeToCountry[locale]);
+      } else {
+        // Try to match just the country part (e.g., "en-US" -> check for any "-US")
+        const countryPart = locale?.split("-")[1]?.toUpperCase();
+        if (countryPart) {
+          const match = countryCodes.find(c => c.country === countryPart);
+          if (match) setCountryCode(match.code);
+        }
+      }
+    } catch (e) {
+      // Fallback to Ghana if detection fails
+      console.log("Country detection failed, using default", e);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,9 +199,13 @@ export default function WaitlistPage() {
         return;
       }
 
+      // Combine country code with phone number
+      const fullPhone = phone ? `${countryCode}${phone.replace(/^0+/, '')}` : undefined;
+
       const response = await waitlistService.subscribe(
         email,
         name || undefined,
+        fullPhone,
         ["billboard", "sharing", "creating"]
       );
 
@@ -47,6 +217,7 @@ export default function WaitlistPage() {
         setMessage("🎉 Welcome to the waitlist! We'll notify you when we launch.");
         setEmail("");
         setName("");
+        setPhone("");
       }
     } catch (error) {
       setStatus("error");
@@ -56,6 +227,8 @@ export default function WaitlistPage() {
       setLoading(false);
     }
   };
+
+  const selectedCountry = countryCodes.find(c => c.code === countryCode);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
@@ -163,6 +336,41 @@ export default function WaitlistPage() {
                     className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-xl focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
                     disabled={loading}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    <span className="flex items-center gap-2">
+                      <FaPhone className="text-xs" />
+                      Phone Number
+                    </span>
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="w-28 px-3 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-xl focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] transition cursor-pointer"
+                      disabled={loading}
+                    >
+                      {countryCodes.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.flag} {country.code}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      placeholder={selectedCountry?.country === "GH" ? "241234567" : "Phone number"}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      className="flex-1 px-4 py-3 bg-[var(--background)] border border-[var(--foreground)]/20 rounded-xl focus:outline-none focus:border-[var(--foreground)]/50 text-[var(--foreground)] placeholder-[var(--foreground)]/40 transition"
+                      disabled={loading}
+                      maxLength={15}
+                    />
+                  </div>
+                  <p className="text-xs text-[var(--foreground)]/40 mt-1.5">
+                    We&apos;ll send you SMS updates about the launch
+                  </p>
                 </div>
 
                 <motion.button

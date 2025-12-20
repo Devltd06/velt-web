@@ -1,8 +1,17 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
-import { FaClock, FaPlay, FaDollarSign, FaMapMarkerAlt, FaChartLine } from 'react-icons/fa';
+import { 
+  FaClock, 
+  FaPlay, 
+  FaDollarSign, 
+  FaMapMarkerAlt, 
+  FaArrowRight,
+  FaChartLine,
+  FaCalendarAlt,
+  FaEye
+} from 'react-icons/fa';
 
 interface Stats {
   pending: number;
@@ -10,6 +19,7 @@ interface Stats {
   revenue: number;
   locations: number;
   available: number;
+  totalBookings: number;
 }
 
 interface Booking {
@@ -19,49 +29,78 @@ interface Booking {
   price: number;
   created_at: string;
   user_email?: string;
+  billboard_locations?: {
+    name: string;
+  };
+}
+
+interface Location {
+  id: string;
+  name: string;
+  location: string;
+  status: string;
+  daily_rate: number;
+  image_url?: string;
 }
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<Stats>({ pending: 0, active: 0, revenue: 0, locations: 0, available: 0 });
-  const [pendingBookings, setPendingBookings] = useState<Booking[]>([]);
+  const [stats, setStats] = useState<Stats>({ 
+    pending: 0, active: 0, revenue: 0, locations: 0, available: 0, totalBookings: 0 
+  });
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [topLocations, setTopLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [greeting, setGreeting] = useState('');
+
+  const getGreeting = useCallback(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
 
   useEffect(() => {
+    setGreeting(getGreeting());
     fetchDashboardData();
-  }, []);
+  }, [getGreeting]);
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch stats - these would come from your actual tables
-      // For now we'll use placeholder data since the billboard tables might not exist yet
-      
-      // Try to fetch from billboard_bookings if it exists
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('billboard_bookings')
-        .select('*');
+        .select('*, billboard_locations(name)')
+        .order('created_at', { ascending: false });
 
       if (!bookingsError && bookingsData) {
         const pending = bookingsData.filter(b => b.status === 'pending').length;
         const active = bookingsData.filter(b => b.status === 'active').length;
         const revenue = bookingsData
-          .filter(b => b.status === 'approved' || b.status === 'active' || b.status === 'completed')
+          .filter(b => ['approved', 'active', 'completed'].includes(b.status))
           .reduce((sum, b) => sum + (b.price || 0), 0);
 
-        setStats(prev => ({ ...prev, pending, active, revenue }));
-        setPendingBookings(bookingsData.filter(b => b.status === 'pending').slice(0, 5));
+        setStats(prev => ({ ...prev, pending, active, revenue, totalBookings: bookingsData.length }));
+        setRecentBookings(bookingsData.slice(0, 5));
       }
 
-      // Try to fetch locations
       const { data: locationsData, error: locationsError } = await supabase
         .from('billboard_locations')
-        .select('*');
+        .select('*')
+        .order('daily_rate', { ascending: false })
+        .limit(4);
 
       if (!locationsError && locationsData) {
-        const total = locationsData.length;
-        const available = locationsData.filter(l => l.status === 'available').length;
-        setStats(prev => ({ ...prev, locations: total, available }));
-      }
+        const { count: totalCount } = await supabase
+          .from('billboard_locations')
+          .select('*', { count: 'exact', head: true });
+        
+        const { count: availableCount } = await supabase
+          .from('billboard_locations')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'available');
 
+        setStats(prev => ({ ...prev, locations: totalCount || 0, available: availableCount || 0 }));
+        setTopLocations(locationsData);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -69,179 +108,196 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const formatDate = () => {
-    return new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-GH', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return new Intl.NumberFormat('en-GH').format(amount);
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      pending: 'bg-orange-500/15 text-orange-500',
-      approved: 'bg-green-500/15 text-green-500',
-      rejected: 'bg-red-500/15 text-red-500',
-      active: 'bg-blue-500/15 text-blue-500',
-      completed: 'bg-gray-500/15 text-gray-500',
+  const getStatusConfig = (status: string) => {
+    const config: Record<string, { bg: string; text: string; dot: string }> = {
+      pending: { bg: 'bg-amber-500/10', text: 'text-amber-400', dot: 'bg-amber-400' },
+      approved: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+      active: { bg: 'bg-blue-500/10', text: 'text-blue-400', dot: 'bg-blue-400' },
+      completed: { bg: 'bg-gray-500/10', text: 'text-gray-400', dot: 'bg-gray-400' },
+      rejected: { bg: 'bg-red-500/10', text: 'text-red-400', dot: 'bg-red-400' },
     };
-    return styles[status] || 'bg-gray-500/15 text-gray-500';
+    return config[status] || config.pending;
   };
+
+  const StatCard = ({ label, value, icon: Icon, iconBg, iconColor, subtitle, subtitleColor = 'text-white/35' }: {
+    label: string;
+    value: string | number;
+    icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+    subtitle?: string;
+    subtitleColor?: string;
+  }) => (
+    <div className="group bg-white/[0.02] rounded-2xl p-5 border border-white/[0.04] hover:border-white/[0.08] transition-all duration-300">
+      <div className="flex items-start justify-between">
+        <div className="space-y-3">
+          <p className="text-sm text-white/40">{label}</p>
+          <p className="text-2xl lg:text-3xl font-semibold tracking-tight">
+            {isLoading ? <span className="inline-block w-16 h-8 bg-white/5 rounded animate-pulse" /> : value}
+          </p>
+          {subtitle && <p className={`text-xs ${subtitleColor}`}>{subtitle}</p>}
+        </div>
+        <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-4 lg:p-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+    <div className="p-4 lg:p-8 space-y-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">Dashboard</h2>
-          <p className="text-gray-400">Overview of billboard operations</p>
+          <p className="text-white/40 text-sm">{greeting}</p>
+          <h1 className="text-2xl lg:text-3xl font-semibold mt-1">Dashboard Overview</h1>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-sm text-gray-400">Today</p>
-            <p className="font-semibold text-sm md:text-base">{formatDate()}</p>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+            <FaCalendarAlt className="w-4 h-4 text-white/35" />
+            <span className="text-sm text-white/50">
+              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </span>
           </div>
-          <div className="w-10 h-10 rounded-full bg-[#D4AF37] flex items-center justify-center text-black font-bold">
-            A
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-        {/* Pending Bookings */}
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">Pending Bookings</p>
-              <p className="text-3xl font-bold mt-2">
-                {isLoading ? '-' : stats.pending}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
-              <FaClock className="w-6 h-6 text-orange-500" />
-            </div>
-          </div>
-          <p className="text-orange-500 text-sm mt-4">Requires review</p>
-        </div>
-
-        {/* Active Campaigns */}
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">Active Campaigns</p>
-              <p className="text-3xl font-bold mt-2">
-                {isLoading ? '-' : stats.active}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-              <FaPlay className="w-6 h-6 text-blue-500" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-4">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <p className="text-green-500 text-sm">Live now</p>
-          </div>
-        </div>
-
-        {/* Total Revenue */}
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">Total Revenue</p>
-              <p className="text-3xl font-bold mt-2">
-                GHS {isLoading ? '-' : formatCurrency(stats.revenue)}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-[#D4AF37]/20 flex items-center justify-center">
-              <FaDollarSign className="w-6 h-6 text-[#D4AF37]" />
-            </div>
-          </div>
-          <p className="text-gray-400 text-sm mt-4">This month</p>
-        </div>
-
-        {/* Billboard Locations */}
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-400 text-sm">Billboard Locations</p>
-              <p className="text-3xl font-bold mt-2">
-                {isLoading ? '-' : stats.locations}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-              <FaMapMarkerAlt className="w-6 h-6 text-purple-500" />
-            </div>
-          </div>
-          <p className="text-green-500 text-sm mt-4">
-            {isLoading ? '-' : stats.available} available
-          </p>
         </div>
       </div>
 
-      {/* Recent Bookings & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Bookings */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700">
-          <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-            <h3 className="font-semibold">Pending Bookings</h3>
-            <Link href="/admin/bookings" className="text-sm text-[#D4AF37] hover:underline">
-              View all
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Pending Review" value={stats.pending} icon={FaClock} iconBg="bg-amber-500/10" iconColor="text-amber-400" subtitle="Awaiting approval" subtitleColor="text-amber-400/70" />
+        <StatCard label="Active Campaigns" value={stats.active} icon={FaPlay} iconBg="bg-blue-500/10" iconColor="text-blue-400" subtitle="Currently running" subtitleColor="text-blue-400/70" />
+        <StatCard label="Total Revenue" value={`GHS ${formatCurrency(stats.revenue)}`} icon={FaDollarSign} iconBg="bg-emerald-500/10" iconColor="text-emerald-400" subtitle="All time earnings" subtitleColor="text-emerald-400/70" />
+        <StatCard label="Locations" value={stats.locations} icon={FaMapMarkerAlt} iconBg="bg-purple-500/10" iconColor="text-purple-400" subtitle={`${stats.available} available`} subtitleColor="text-purple-400/70" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white/[0.02] rounded-2xl border border-white/[0.04] overflow-hidden">
+          <div className="p-5 border-b border-white/[0.04] flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold">Recent Bookings</h2>
+              <p className="text-xs text-white/40 mt-0.5">Latest booking requests</p>
+            </div>
+            <Link href="/admin/bookings" className="flex items-center gap-2 text-sm text-[#D4AF37] hover:text-[#D4AF37]/80 transition-colors">
+              View all <FaArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="divide-y divide-gray-700">
+          
+          <div className="divide-y divide-white/[0.04]">
             {isLoading ? (
-              <div className="p-6 text-center text-gray-400">Loading...</div>
-            ) : pendingBookings.length === 0 ? (
-              <div className="p-6 text-center text-gray-400">No pending bookings</div>
-            ) : (
-              pendingBookings.map((booking) => (
-                <div key={booking.id} className="p-4 hover:bg-gray-700/50 transition">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">{booking.campaign_name || 'Unnamed Campaign'}</p>
-                      <p className="text-sm text-gray-400">{booking.user_email || 'No email'}</p>
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 animate-pulse">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-white/5" />
+                    <div className="flex-1 space-y-2">
+                      <div className="w-32 h-4 bg-white/5 rounded" />
+                      <div className="w-24 h-3 bg-white/5 rounded" />
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(booking.status)}`}>
-                      {booking.status}
-                    </span>
                   </div>
-                  <div className="flex justify-between items-center mt-2 text-sm">
-                    <span className="text-gray-400">
-                      {new Date(booking.created_at).toLocaleDateString()}
-                    </span>
-                    <span className="font-semibold text-[#D4AF37]">
-                      GHS {formatCurrency(booking.price || 0)}
-                    </span>
+                </div>
+              ))
+            ) : recentBookings.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="w-16 h-16 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-4">
+                  <FaChartLine className="w-6 h-6 text-white/20" />
+                </div>
+                <p className="text-white/40 text-sm">No bookings yet</p>
+              </div>
+            ) : (
+              recentBookings.map((booking) => {
+                const statusConfig = getStatusConfig(booking.status);
+                return (
+                  <div key={booking.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 flex items-center justify-center flex-shrink-0">
+                        <FaEye className="w-4 h-4 text-[#D4AF37]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{booking.campaign_name || 'Unnamed Campaign'}</p>
+                        <p className="text-xs text-white/40 truncate mt-0.5">
+                          {booking.billboard_locations?.name || 'No location'} • {formatDate(booking.created_at)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-sm font-medium text-[#D4AF37] hidden sm:block">GHS {formatCurrency(booking.price || 0)}</span>
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
+                          {booking.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white/[0.02] rounded-2xl border border-white/[0.04] overflow-hidden">
+          <div className="p-5 border-b border-white/[0.04]">
+            <h2 className="font-semibold">Top Locations</h2>
+            <p className="text-xs text-white/40 mt-0.5">Highest daily rates</p>
+          </div>
+          
+          <div className="p-3 space-y-2">
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-3 rounded-xl bg-white/[0.02] animate-pulse">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-white/5" />
+                    <div className="flex-1 space-y-2">
+                      <div className="w-24 h-4 bg-white/5 rounded" />
+                      <div className="w-16 h-3 bg-white/5 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : topLocations.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="w-12 h-12 mx-auto rounded-full bg-white/5 flex items-center justify-center mb-3">
+                  <FaMapMarkerAlt className="w-5 h-5 text-white/20" />
+                </div>
+                <p className="text-white/40 text-sm">No locations yet</p>
+              </div>
+            ) : (
+              topLocations.map((location) => (
+                <div key={location.id} className="p-3 rounded-xl hover:bg-white/[0.03] transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    {location.image_url ? (
+                      <img src={location.image_url} alt={location.name} className="w-12 h-12 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-500/5 flex items-center justify-center">
+                        <FaMapMarkerAlt className="w-4 h-4 text-purple-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{location.name}</p>
+                      <p className="text-xs text-white/40 truncate">{location.location}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-[#D4AF37]">GHS {formatCurrency(location.daily_rate)}</p>
+                      <p className="text-[10px] text-white/35">per day</p>
+                    </div>
                   </div>
                 </div>
               ))
             )}
           </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700">
-          <div className="p-6 border-b border-gray-700">
-            <h3 className="font-semibold">Recent Activity</h3>
-          </div>
-          <div className="divide-y divide-gray-700">
-            {isLoading ? (
-              <div className="p-6 text-center text-gray-400">Loading...</div>
-            ) : (
-              <div className="p-6 text-center text-gray-400">
-                <FaChartLine className="mx-auto text-3xl mb-3 opacity-50" />
-                <p>Activity tracking coming soon</p>
-              </div>
-            )}
+          
+          <div className="p-3 border-t border-white/[0.04]">
+            <Link href="/admin/locations" className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm text-white/50 hover:text-white hover:bg-white/[0.04] transition-all">
+              Manage all locations <FaArrowRight className="w-3 h-3" />
+            </Link>
           </div>
         </div>
       </div>

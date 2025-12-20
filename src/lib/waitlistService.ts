@@ -5,7 +5,7 @@ export const waitlistService = {
   /**
    * Subscribe email to waitlist
    */
-  async subscribe(email: string, full_name?: string, interests?: string[]): Promise<WaitlistResponse> {
+  async subscribe(email: string, full_name?: string, phone_number?: string, interests?: string[]): Promise<WaitlistResponse> {
     try {
       const { data, error } = await supabase
         .from("waitlist")
@@ -13,6 +13,7 @@ export const waitlistService = {
           {
             email: email.toLowerCase(),
             full_name: full_name || null,
+            phone_number: phone_number || null,
             interests: interests || ["billboard", "sharing", "creating"],
             status: "pending",
           },
