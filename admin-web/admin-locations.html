@@ -1,0 +1,390 @@
+<!-- Billboard Admin - Locations Management -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Locations | Billboard Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .velt-accent { color: #D4AF37; }
+    .velt-accent-bg { background-color: #D4AF37; }
+    .sidebar-link.active { background-color: rgba(212, 175, 55, 0.15); border-left: 3px solid #D4AF37; }
+    .modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); }
+    .modal.open { display: flex; }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  
+  <!-- Sidebar -->
+  <aside class="fixed left-0 top-0 w-64 h-full bg-gray-800 border-r border-gray-700 z-50">
+    <div class="p-6 border-b border-gray-700">
+      <h1 class="text-xl font-bold velt-accent">Velt Billboard</h1>
+      <p class="text-gray-400 text-sm mt-1">Admin Dashboard</p>
+    </div>
+    <nav class="p-4">
+      <a href="admin-dashboard.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Dashboard
+      </a>
+      <a href="admin-bookings.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 transition mt-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Bookings
+      </a>
+      <a href="admin-media.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 transition mt-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Media
+      </a>
+      <a href="admin-locations.html" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 transition mt-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+        Locations
+      </a>
+      <a href="admin-users.html" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 transition mt-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        Users
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="ml-64 p-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h2 class="text-2xl font-bold">Billboard Locations</h2>
+        <p class="text-gray-400">Manage available billboard spots</p>
+      </div>
+      <button onclick="openAddModal()" class="px-4 py-2 velt-accent-bg text-black font-semibold rounded-lg hover:opacity-90 transition flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Location
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">Total Locations</p>
+        <p class="text-2xl font-bold mt-1" id="stat-total">-</p>
+      </div>
+      <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">Active</p>
+        <p class="text-2xl font-bold mt-1 text-green-500" id="stat-active">-</p>
+      </div>
+      <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">Digital</p>
+        <p class="text-2xl font-bold mt-1 text-blue-500" id="stat-digital">-</p>
+      </div>
+      <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+        <p class="text-gray-400 text-sm">Static</p>
+        <p class="text-2xl font-bold mt-1 text-purple-500" id="stat-static">-</p>
+      </div>
+    </div>
+
+    <!-- Locations Table -->
+    <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-gray-700/50">
+          <tr>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-300">Location</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-300">Type / Size</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-300">Pricing</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-300">Daily Views</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-300">Status</th>
+            <th class="text-left px-6 py-4 text-sm font-semibold text-gray-300">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="locations-table" class="divide-y divide-gray-700">
+          <tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Add/Edit Location Modal -->
+  <div id="location-modal" class="modal">
+    <div class="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto m-4 border border-gray-700">
+      <div class="p-6 border-b border-gray-700 flex justify-between items-center sticky top-0 bg-gray-800 z-10">
+        <h3 class="text-lg font-bold" id="modal-title">Add Billboard Location</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="location-form" class="p-6 space-y-6">
+        <input type="hidden" id="location-id" />
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Name *</label>
+            <input type="text" id="loc-name" required class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="e.g., Accra Mall Billboard" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Type *</label>
+            <select id="loc-type" required class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white">
+              <option value="digital">Digital</option>
+              <option value="static">Static</option>
+              <option value="led">LED</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Description</label>
+          <textarea id="loc-description" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white resize-none" rows="2" placeholder="Brief description of the location..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Address *</label>
+            <input type="text" id="loc-address" required class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="Street address" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">City *</label>
+            <input type="text" id="loc-city" required class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="City" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Region *</label>
+            <input type="text" id="loc-region" required class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="Region" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Size *</label>
+            <input type="text" id="loc-size" required class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="e.g., 48ft x 14ft" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Daily Impressions</label>
+            <input type="number" id="loc-impressions" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="e.g., 50000" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Price/Day (GHS) *</label>
+            <input type="number" id="loc-price-day" required class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="500" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Price/Week (GHS)</label>
+            <input type="number" id="loc-price-week" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="3000" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-2">Price/Month (GHS)</label>
+            <input type="number" id="loc-price-month" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="10000" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Photo URL</label>
+          <input type="url" id="loc-photo" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white" placeholder="https://..." />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="loc-active" checked class="w-4 h-4 rounded" />
+          <label for="loc-active" class="text-sm text-gray-300">Active (available for booking)</label>
+        </div>
+
+        <div class="flex gap-4 pt-4 border-t border-gray-700">
+          <button type="button" onclick="closeModal()" class="flex-1 py-3 rounded-lg border border-gray-600 hover:bg-gray-700 transition">Cancel</button>
+          <button type="submit" class="flex-1 py-3 rounded-lg velt-accent-bg text-black font-semibold hover:opacity-90 transition">Save Location</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Supabase
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allLocations = [];
+    let editingId = null;
+
+    async function fetchLocations() {
+      try {
+        const { data, error } = await supabase
+          .from('billboard_locations')
+          .select('*')
+          .order('name');
+
+        if (error) throw error;
+        allLocations = data || [];
+        
+        // Update stats
+        document.getElementById('stat-total').textContent = allLocations.length;
+        document.getElementById('stat-active').textContent = allLocations.filter(l => l.is_active).length;
+        document.getElementById('stat-digital').textContent = allLocations.filter(l => l.type === 'digital' || l.type === 'led').length;
+        document.getElementById('stat-static').textContent = allLocations.filter(l => l.type === 'static').length;
+        
+        renderLocations();
+      } catch (err) {
+        console.error('Error fetching locations:', err);
+      }
+    }
+
+    function renderLocations() {
+      const tbody = document.getElementById('locations-table');
+      
+      if (allLocations.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">No locations found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allLocations.map(l => `
+        <tr class="hover:bg-gray-700/30 transition">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              ${l.photo_url ? `
+                <img src="${l.photo_url}" class="w-12 h-12 rounded-lg object-cover" />
+              ` : `
+                <div class="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                </div>
+              `}
+              <div>
+                <p class="font-medium">${l.name}</p>
+                <p class="text-sm text-gray-400">${l.city}, ${l.region}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 rounded text-xs font-semibold ${
+              l.type === 'digital' ? 'bg-blue-500/20 text-blue-400' :
+              l.type === 'led' ? 'bg-purple-500/20 text-purple-400' :
+              'bg-gray-500/20 text-gray-400'
+            }">${l.type.toUpperCase()}</span>
+            <p class="text-sm text-gray-400 mt-1">${l.size}</p>
+          </td>
+          <td class="px-6 py-4">
+            <p class="font-semibold velt-accent">GHS ${l.price_per_day}/day</p>
+            <p class="text-sm text-gray-400">GHS ${l.price_per_week || '-'}/week</p>
+          </td>
+          <td class="px-6 py-4">
+            <p class="font-medium">${(l.impressions_per_day || 0).toLocaleString()}</p>
+            <p class="text-sm text-gray-400">per day</p>
+          </td>
+          <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${l.is_active ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-400'}">
+              ${l.is_active ? 'Active' : 'Inactive'}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-2">
+              <button onclick="editLocation('${l.id}')" class="p-2 hover:bg-gray-700 rounded-lg transition" title="Edit">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button onclick="toggleActive('${l.id}', ${!l.is_active})" class="p-2 hover:bg-gray-700 rounded-lg transition" title="${l.is_active ? 'Deactivate' : 'Activate'}">
+                <svg class="w-5 h-5 ${l.is_active ? 'text-yellow-500' : 'text-green-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  ${l.is_active 
+                    ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>'
+                    : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+                  }
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('modal-title').textContent = 'Add Billboard Location';
+      document.getElementById('location-form').reset();
+      document.getElementById('loc-active').checked = true;
+      document.getElementById('location-modal').classList.add('open');
+    }
+
+    function editLocation(id) {
+      const loc = allLocations.find(l => l.id === id);
+      if (!loc) return;
+
+      editingId = id;
+      document.getElementById('modal-title').textContent = 'Edit Billboard Location';
+      document.getElementById('location-id').value = id;
+      document.getElementById('loc-name').value = loc.name;
+      document.getElementById('loc-type').value = loc.type;
+      document.getElementById('loc-description').value = loc.description || '';
+      document.getElementById('loc-address').value = loc.address;
+      document.getElementById('loc-city').value = loc.city;
+      document.getElementById('loc-region').value = loc.region;
+      document.getElementById('loc-size').value = loc.size;
+      document.getElementById('loc-impressions').value = loc.impressions_per_day || '';
+      document.getElementById('loc-price-day').value = loc.price_per_day;
+      document.getElementById('loc-price-week').value = loc.price_per_week || '';
+      document.getElementById('loc-price-month').value = loc.price_per_month || '';
+      document.getElementById('loc-photo').value = loc.photo_url || '';
+      document.getElementById('loc-active').checked = loc.is_active;
+
+      document.getElementById('location-modal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('location-modal').classList.remove('open');
+      editingId = null;
+    }
+
+    document.getElementById('location-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const data = {
+        name: document.getElementById('loc-name').value,
+        type: document.getElementById('loc-type').value,
+        description: document.getElementById('loc-description').value || null,
+        address: document.getElementById('loc-address').value,
+        city: document.getElementById('loc-city').value,
+        region: document.getElementById('loc-region').value,
+        size: document.getElementById('loc-size').value,
+        impressions_per_day: parseInt(document.getElementById('loc-impressions').value) || null,
+        price_per_day: parseFloat(document.getElementById('loc-price-day').value),
+        price_per_week: parseFloat(document.getElementById('loc-price-week').value) || null,
+        price_per_month: parseFloat(document.getElementById('loc-price-month').value) || null,
+        photo_url: document.getElementById('loc-photo').value || null,
+        is_active: document.getElementById('loc-active').checked,
+      };
+
+      try {
+        if (editingId) {
+          const { error } = await supabase
+            .from('billboard_locations')
+            .update(data)
+            .eq('id', editingId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('billboard_locations')
+            .insert(data);
+          if (error) throw error;
+        }
+
+        closeModal();
+        fetchLocations();
+        alert(editingId ? 'Location updated!' : 'Location added!');
+      } catch (err) {
+        console.error('Error saving location:', err);
+        alert('Failed to save location');
+      }
+    });
+
+    async function toggleActive(id, active) {
+      try {
+        const { error } = await supabase
+          .from('billboard_locations')
+          .update({ is_active: active })
+          .eq('id', id);
+
+        if (error) throw error;
+        fetchLocations();
+      } catch (err) {
+        console.error('Error updating location:', err);
+        alert('Failed to update location');
+      }
+    }
+
+    fetchLocations();
+  </script>
+</body>
+</html>

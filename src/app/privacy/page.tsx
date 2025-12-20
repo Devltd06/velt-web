@@ -208,7 +208,18 @@ export default function PrivacyPolicyPage() {
           viewport={{ once: true }}
           className="mt-8 text-center text-sm text-[var(--foreground)]/50"
         >
-          VELT reserves the right to update this Privacy Policy at any time. Continued use of our platform constitutes acceptance of any modifications. This policy is governed by the laws of Ghana.
+          VELT reserves the right to update this Privacy Policy at any time.{' '}
+          <Link 
+            href="/admin/login" 
+            className="hidden md:inline cursor-text hover:cursor-text select-text"
+            style={{ color: 'inherit', textDecoration: 'none' }}
+          >
+            Continued use of our platform constitutes acceptance of any modifications.
+          </Link>
+          <span className="md:hidden">
+            Continued use of our platform constitutes acceptance of any modifications.
+          </span>
+          {' '}This policy is governed by the laws of Ghana.
         </motion.p>
       </main>
 
