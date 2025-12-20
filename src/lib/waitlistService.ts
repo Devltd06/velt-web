@@ -116,6 +116,6 @@ export const waitlistService = {
     full_name: string,
     interests: string[]
   ): Promise<WaitlistResponse> {
-    return this.subscribe(email, full_name, interests);
+    return this.subscribe(email, full_name, undefined, interests);
   },
 };
