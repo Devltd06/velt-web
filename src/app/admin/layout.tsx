@@ -194,11 +194,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Sidebar */}
         <aside className={`
           fixed left-0 top-0 w-72 h-full bg-black border-r border-white/[0.06] z-50
-          transition-transform duration-300 ease-out
+          transition-transform duration-300 ease-out flex flex-col
           lg:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
-          <div className="h-16 flex items-center px-6 border-b border-white/[0.06]">
+          <div className="h-16 flex items-center px-6 border-b border-white/[0.06] flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg overflow-hidden">
                 <VeltLogo size={32} />
@@ -210,7 +210,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
 
-          <nav className="p-3 space-y-1">
+          <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
             <p className="px-3 py-2 text-[10px] font-medium text-white/25 uppercase tracking-wider">
               Main Menu
             </p>
@@ -248,7 +248,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </nav>
 
-          <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/[0.06]">
+          <div className="p-3 border-t border-white/[0.06] flex-shrink-0">
             <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-white/[0.02] mb-2">
               {adminUser?.avatar_url ? (
                 <img 
