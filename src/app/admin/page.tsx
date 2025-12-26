@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import { 
@@ -10,23 +10,35 @@ import {
   FaArrowRight,
   FaChartLine,
   FaCalendarAlt,
-  FaEye
+  FaEye,
+  FaUsers,
+  FaCrown,
+  FaStar,
+  FaFire,
+  FaRocket
 } from 'react-icons/fa';
 
 interface Stats {
   pending: number;
   active: number;
   revenue: number;
+  subscriptionRevenue: number;
+  totalRevenue: number;
   locations: number;
   available: number;
   totalBookings: number;
+  paidUsers: number;
+  freeUsers: number;
+  orionUsers: number;
+  titanUsers: number;
+  phoenixUsers: number;
 }
 
 interface Booking {
   id: string;
   campaign_name: string;
   status: string;
-  price: number;
+  total_price: number;
   created_at: string;
   user_email?: string;
   billboard_locations?: {
@@ -39,18 +51,25 @@ interface Location {
   name: string;
   location: string;
   status: string;
-  daily_rate: number;
+  price_per_day: number;
   image_url?: string;
+}
+
+interface ChartDataPoint {
+  label: string;
+  value: number;
 }
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats>({ 
-    pending: 0, active: 0, revenue: 0, locations: 0, available: 0, totalBookings: 0 
+    pending: 0, active: 0, revenue: 0, subscriptionRevenue: 0, totalRevenue: 0, locations: 0, available: 0, totalBookings: 0, paidUsers: 0, freeUsers: 0, orionUsers: 0, titanUsers: 0, phoenixUsers: 0 
   });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [topLocations, setTopLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [greeting, setGreeting] = useState('');
+  const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month'>('week');
+  const [signupData, setSignupData] = useState<{ date: string }[]>([]);
 
   const getGreeting = useCallback(() => {
     const hour = new Date().getHours();
@@ -59,6 +78,60 @@ export default function AdminDashboardPage() {
     return 'Good evening';
   }, []);
 
+  // Generate chart data based on period
+  const chartData = useMemo<ChartDataPoint[]>(() => {
+    const now = new Date();
+    const data: ChartDataPoint[] = [];
+
+    if (chartPeriod === 'day') {
+      // Last 24 hours by hour
+      for (let i = 23; i >= 0; i--) {
+        const hourStart = new Date(now.getTime() - i * 60 * 60 * 1000);
+        const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000);
+        const count = signupData.filter(s => {
+          const date = new Date(s.date);
+          return date >= hourStart && date < hourEnd;
+        }).length;
+        data.push({ 
+          label: hourStart.toLocaleTimeString('en-US', { hour: 'numeric' }), 
+          value: count 
+        });
+      }
+    } else if (chartPeriod === 'week') {
+      // Last 7 days
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+        const count = signupData.filter(s => {
+          const date = new Date(s.date);
+          return date >= dayStart && date < dayEnd;
+        }).length;
+        data.push({ 
+          label: dayStart.toLocaleDateString('en-US', { weekday: 'short' }), 
+          value: count 
+        });
+      }
+    } else {
+      // Last 4 weeks
+      for (let i = 3; i >= 0; i--) {
+        const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+        const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const count = signupData.filter(s => {
+          const date = new Date(s.date);
+          return date >= weekStart && date < weekEnd;
+        }).length;
+        data.push({ 
+          label: `Week ${4 - i}`, 
+          value: count 
+        });
+      }
+    }
+
+    return data;
+  }, [signupData, chartPeriod]);
+
+  const maxChartValue = Math.max(...chartData.map(d => d.value), 1);
+
   useEffect(() => {
     setGreeting(getGreeting());
     fetchDashboardData();
@@ -66,6 +139,7 @@ export default function AdminDashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
+      // Fetch bookings with correct field names
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('billboard_bookings')
         .select('*, billboard_locations(name)')
@@ -74,18 +148,20 @@ export default function AdminDashboardPage() {
       if (!bookingsError && bookingsData) {
         const pending = bookingsData.filter(b => b.status === 'pending').length;
         const active = bookingsData.filter(b => b.status === 'active').length;
+        // Use total_price for revenue calculation
         const revenue = bookingsData
           .filter(b => ['approved', 'active', 'completed'].includes(b.status))
-          .reduce((sum, b) => sum + (b.price || 0), 0);
+          .reduce((sum, b) => sum + (b.total_price || 0), 0);
 
         setStats(prev => ({ ...prev, pending, active, revenue, totalBookings: bookingsData.length }));
         setRecentBookings(bookingsData.slice(0, 5));
       }
 
+      // Fetch locations with correct field names
       const { data: locationsData, error: locationsError } = await supabase
         .from('billboard_locations')
         .select('*')
-        .order('daily_rate', { ascending: false })
+        .order('price_per_day', { ascending: false })
         .limit(4);
 
       if (!locationsError && locationsData) {
@@ -100,6 +176,62 @@ export default function AdminDashboardPage() {
 
         setStats(prev => ({ ...prev, locations: totalCount || 0, available: availableCount || 0 }));
         setTopLocations(locationsData);
+      }
+
+      // Fetch signature (paid) users from subscription_records
+      const { count: signatureCount } = await supabase
+        .from('subscription_records')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+
+      const { count: totalUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Count users by tier from location_monthly_stars
+      const { count: orionCount } = await supabase
+        .from('location_monthly_stars')
+        .select('*', { count: 'exact', head: true })
+        .eq('tier_achieved', 'orion');
+      
+      const { count: titanCount } = await supabase
+        .from('location_monthly_stars')
+        .select('*', { count: 'exact', head: true })
+        .eq('tier_achieved', 'titan');
+      
+      const { count: phoenixCount } = await supabase
+        .from('location_monthly_stars')
+        .select('*', { count: 'exact', head: true })
+        .eq('tier_achieved', 'phoenix');
+
+      // Calculate subscription revenue from subscription_records (ALL payments, not just active)
+      const { data: subRevenueData } = await supabase
+        .from('subscription_records')
+        .select('amount_paid');
+      
+      const subscriptionRevenue = subRevenueData?.reduce((sum, p) => sum + (p.amount_paid || 0), 0) || 0;
+
+      const paidUsers = signatureCount || 0;
+      const freeUsers = (totalUsers || 0) - paidUsers;
+      setStats(prev => ({ 
+        ...prev, 
+        paidUsers, 
+        freeUsers,
+        orionUsers: orionCount || 0,
+        titanUsers: titanCount || 0,
+        phoenixUsers: phoenixCount || 0,
+        subscriptionRevenue,
+        totalRevenue: prev.revenue + subscriptionRevenue
+      }));
+
+      // Fetch user signup dates for chart
+      const { data: profileDates } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .order('created_at', { ascending: false });
+
+      if (profileDates) {
+        setSignupData(profileDates.map(p => ({ date: p.created_at })));
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -174,11 +306,114 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard label="Pending Review" value={stats.pending} icon={FaClock} iconBg="bg-amber-500/10" iconColor="text-amber-400" subtitle="Awaiting approval" subtitleColor="text-amber-400/70" />
         <StatCard label="Active Campaigns" value={stats.active} icon={FaPlay} iconBg="bg-blue-500/10" iconColor="text-blue-400" subtitle="Currently running" subtitleColor="text-blue-400/70" />
-        <StatCard label="Total Revenue" value={`GHS ${formatCurrency(stats.revenue)}`} icon={FaDollarSign} iconBg="bg-emerald-500/10" iconColor="text-emerald-400" subtitle="All time earnings" subtitleColor="text-emerald-400/70" />
+        <StatCard label="Booking Revenue" value={`GHS ${formatCurrency(stats.revenue)}`} icon={FaDollarSign} iconBg="bg-emerald-500/10" iconColor="text-emerald-400" subtitle="From bookings" subtitleColor="text-emerald-400/70" />
+        <StatCard label="Subscription Revenue" value={`GHS ${formatCurrency(stats.subscriptionRevenue / 100)}`} icon={FaCrown} iconBg="bg-[#D4AF37]/10" iconColor="text-[#D4AF37]" subtitle="From subscriptions" subtitleColor="text-[#D4AF37]/70" />
+        <StatCard label="Total Revenue" value={`GHS ${formatCurrency(stats.revenue + (stats.subscriptionRevenue / 100))}`} icon={FaChartLine} iconBg="bg-purple-500/10" iconColor="text-purple-400" subtitle="All earnings" subtitleColor="text-purple-400/70" />
+      </div>
+
+      {/* Secondary Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Locations" value={stats.locations} icon={FaMapMarkerAlt} iconBg="bg-purple-500/10" iconColor="text-purple-400" subtitle={`${stats.available} available`} subtitleColor="text-purple-400/70" />
+        <StatCard label="Orion Earners" value={stats.orionUsers} icon={FaStar} iconBg="bg-cyan-500/10" iconColor="text-cyan-400" subtitle="Star tier 1" subtitleColor="text-cyan-400/70" />
+        <StatCard label="Titan Earners" value={stats.titanUsers} icon={FaFire} iconBg="bg-orange-500/10" iconColor="text-orange-400" subtitle="Star tier 2" subtitleColor="text-orange-400/70" />
+        <StatCard label="Phoenix Earners" value={stats.phoenixUsers} icon={FaRocket} iconBg="bg-rose-500/10" iconColor="text-rose-400" subtitle="Star tier 3" subtitleColor="text-rose-400/70" />
+      </div>
+
+      {/* Paid vs Free Users + Chart Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Paid vs Free Users */}
+        <div className="bg-white/[0.02] rounded-2xl border border-white/[0.04] p-5">
+          <h3 className="font-semibold mb-4">User Subscriptions</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center">
+                  <FaCrown className="w-4 h-4 text-[#D4AF37]" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Signature Users</p>
+                  <p className="text-xs text-white/40">Paid subscriptions</p>
+                </div>
+              </div>
+              <span className="text-xl font-semibold text-[#D4AF37]">{stats.paidUsers}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                  <FaUsers className="w-4 h-4 text-white/50" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Free Users</p>
+                  <p className="text-xs text-white/40">Basic accounts</p>
+                </div>
+              </div>
+              <span className="text-xl font-semibold">{stats.freeUsers}</span>
+            </div>
+            {/* Progress Bar */}
+            <div className="pt-3 border-t border-white/[0.04]">
+              <div className="flex justify-between text-xs text-white/40 mb-2">
+                <span>Conversion Rate</span>
+                <span>{stats.paidUsers + stats.freeUsers > 0 ? Math.round((stats.paidUsers / (stats.paidUsers + stats.freeUsers)) * 100) : 0}%</span>
+              </div>
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#D4AF37] to-[#B8962E] rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${stats.paidUsers + stats.freeUsers > 0 ? (stats.paidUsers / (stats.paidUsers + stats.freeUsers)) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* User Signup Trend Chart */}
+        <div className="lg:col-span-2 bg-white/[0.02] rounded-2xl border border-white/[0.04] p-5">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="font-semibold">User Signups</h3>
+              <p className="text-xs text-white/40 mt-0.5">New user registrations over time</p>
+            </div>
+            <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+              {(['day', 'week', 'month'] as const).map(period => (
+                <button
+                  key={period}
+                  onClick={() => setChartPeriod(period)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    chartPeriod === period ? 'bg-[#D4AF37] text-black' : 'text-white/50 hover:text-white'
+                  }`}
+                >
+                  {period.charAt(0).toUpperCase() + period.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Animated Bar Chart */}
+          <div className="flex items-end gap-2 h-32">
+            {chartData.map((item, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full bg-white/5 rounded-t-lg relative overflow-hidden" style={{ height: '100px' }}>
+                  <div 
+                    className="absolute bottom-0 w-full bg-gradient-to-t from-[#D4AF37] to-[#D4AF37]/60 rounded-t-lg transition-all duration-700 ease-out"
+                    style={{ 
+                      height: `${(item.value / maxChartValue) * 100}%`,
+                      transitionDelay: `${i * 80}ms`
+                    }}
+                  >
+                    {item.value > 0 && (
+                      <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-[#D4AF37]">
+                        {item.value}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="text-[10px] text-white/40">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -229,7 +464,7 @@ export default function AdminDashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-sm font-medium text-[#D4AF37] hidden sm:block">GHS {formatCurrency(booking.price || 0)}</span>
+                        <span className="text-sm font-medium text-[#D4AF37] hidden sm:block">GHS {formatCurrency(booking.total_price || 0)}</span>
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
                           {booking.status}
@@ -285,7 +520,7 @@ export default function AdminDashboardPage() {
                       <p className="text-xs text-white/40 truncate">{location.location}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-[#D4AF37]">GHS {formatCurrency(location.daily_rate)}</p>
+                      <p className="text-sm font-semibold text-[#D4AF37]">GHS {formatCurrency(location.price_per_day)}</p>
                       <p className="text-[10px] text-white/35">per day</p>
                     </div>
                   </div>

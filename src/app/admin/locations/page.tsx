@@ -11,9 +11,9 @@ interface Location {
   description?: string;
   type: 'digital' | 'static';
   size: string;
-  daily_rate: number;
-  weekly_rate: number;
-  monthly_rate: number;
+  price_per_day: number;
+  price_per_week: number;
+  price_per_month: number;
   daily_views: number;
   status: 'available' | 'occupied' | 'maintenance';
   image_url?: string;
@@ -26,9 +26,9 @@ const defaultLocation: Partial<Location> = {
   description: '',
   type: 'digital',
   size: '',
-  daily_rate: 0,
-  weekly_rate: 0,
-  monthly_rate: 0,
+  price_per_day: 0,
+  price_per_week: 0,
+  price_per_month: 0,
   daily_views: 0,
   status: 'available',
   image_url: '',
@@ -388,7 +388,7 @@ export default function AdminLocationsPage() {
                   <div className="flex items-center gap-4 text-sm mb-4">
                     <div>
                       <span className="text-white/35">Daily:</span>{' '}
-                      <span className="text-[#D4AF37] font-medium">GHS {formatCurrency(location.daily_rate)}</span>
+                      <span className="text-[#D4AF37] font-medium">GHS {formatCurrency(location.price_per_day)}</span>
                     </div>
                   </div>
 
@@ -488,8 +488,8 @@ export default function AdminLocationsPage() {
                   <label className="block text-sm text-white/40 mb-2">Daily Rate (GHS)</label>
                   <input
                     type="number"
-                    value={formData.daily_rate || ''}
-                    onChange={(e) => setFormData({ ...formData, daily_rate: Number(e.target.value) })}
+                    value={formData.price_per_day || ''}
+                    onChange={(e) => setFormData({ ...formData, price_per_day: Number(e.target.value) })}
                     className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37]/50 focus:outline-none"
                     placeholder="500"
                   />
@@ -498,8 +498,8 @@ export default function AdminLocationsPage() {
                   <label className="block text-sm text-white/40 mb-2">Weekly Rate (GHS)</label>
                   <input
                     type="number"
-                    value={formData.weekly_rate || ''}
-                    onChange={(e) => setFormData({ ...formData, weekly_rate: Number(e.target.value) })}
+                    value={formData.price_per_week || ''}
+                    onChange={(e) => setFormData({ ...formData, price_per_week: Number(e.target.value) })}
                     className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37]/50 focus:outline-none"
                     placeholder="3000"
                   />
@@ -508,8 +508,8 @@ export default function AdminLocationsPage() {
                   <label className="block text-sm text-white/40 mb-2">Monthly Rate (GHS)</label>
                   <input
                     type="number"
-                    value={formData.monthly_rate || ''}
-                    onChange={(e) => setFormData({ ...formData, monthly_rate: Number(e.target.value) })}
+                    value={formData.price_per_month || ''}
+                    onChange={(e) => setFormData({ ...formData, price_per_month: Number(e.target.value) })}
                     className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37]/50 focus:outline-none"
                     placeholder="10000"
                   />

@@ -14,8 +14,14 @@ import {
   FaBars, 
   FaTimes,
   FaBell,
-  FaCog
+  FaCog,
+  FaListAlt,
+  FaCalendarAlt,
+  FaShoppingBag,
+  FaGavel,
+  FaDollarSign
 } from 'react-icons/fa';
+import VeltLogo from '@/components/VeltLogo';
 
 interface AdminUser {
   id: string;
@@ -114,9 +120,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navLinks = [
     { href: '/admin', label: 'Dashboard', icon: FaHome, exact: true },
     { href: '/admin/bookings', label: 'Bookings', icon: FaClipboardList, badge: pendingCount },
+    { href: '/admin/monetization', label: 'Monetization', icon: FaDollarSign },
+    { href: '/admin/events', label: 'Events', icon: FaCalendarAlt },
+    { href: '/admin/shop', label: 'Shop', icon: FaShoppingBag },
+    { href: '/admin/auctions', label: 'Auctions', icon: FaGavel },
     { href: '/admin/media', label: 'Media', icon: FaImage },
     { href: '/admin/locations', label: 'Locations', icon: FaMapMarkerAlt },
     { href: '/admin/users', label: 'Users', icon: FaUsers },
+    { href: '/admin/waitlist', label: 'Waitlist', icon: FaListAlt },
   ];
 
   if (pathname === '/admin/login') {
@@ -189,8 +200,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         `}>
           <div className="h-16 flex items-center px-6 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#D4AF37] to-[#B8962E] flex items-center justify-center">
-                <span className="text-black font-bold text-sm">V</span>
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <VeltLogo size={32} />
               </div>
               <div>
                 <h1 className="font-semibold text-white">Velt Billboard</h1>
