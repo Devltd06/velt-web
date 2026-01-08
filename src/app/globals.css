@@ -106,3 +106,35 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Gradient utilities */
+.gradient-violet-pink {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899);
+}
+
+.gradient-cyan-teal {
+  background: linear-gradient(135deg, #06B6D4, #14B8A6);
+}
+
+.gradient-pink-orange {
+  background: linear-gradient(135deg, #EC4899, #F59E0B);
+}
+
+.gradient-indigo-violet {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+}
+
+.gradient-teal-emerald {
+  background: linear-gradient(135deg, #14B8A6, #10B981);
+}
+
+.gradient-multicolor {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899, #06B6D4);
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

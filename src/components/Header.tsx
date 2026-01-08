@@ -50,16 +50,11 @@ function MobileSideSheet({ isOpen, onClose, onShowComingSoon }: { isOpen: boolea
         className={`fixed top-0 right-0 h-full w-72 bg-[var(--background)] z-[70] shadow-2xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {/* Close Button */}
-        <div className="flex justify-between items-center p-6 border-b border-[var(--foreground)] border-opacity-10">
+        <div className="flex justify-between items-center p-6 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--foreground)]/10 flex items-center justify-center">
               <VeltLogo size={24} />
             </div>
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-6 h-1 rounded-full bg-gradient-to-r from-[#8B7355] to-[#C4A77D]"
-            />
             <span className="text-lg font-bold text-[var(--foreground)]">Menu</span>
           </div>
           <button onClick={onClose} className="p-2 text-[var(--foreground)] hover:opacity-70 transition">
@@ -71,9 +66,6 @@ function MobileSideSheet({ isOpen, onClose, onShowComingSoon }: { isOpen: boolea
         <nav className="flex flex-col p-6 gap-4">
           <Link href="/" onClick={onClose} className="py-3 px-4 text-[var(--foreground)] hover:bg-[var(--foreground)]/5 rounded-lg transition">
             Home
-          </Link>
-          <Link href="/investors" onClick={onClose} className="py-3 px-4 text-[var(--foreground)] hover:bg-[var(--foreground)]/5 rounded-lg transition">
-            Investor Boardview
           </Link>
           <Link href="/privacy" onClick={onClose} className="py-3 px-4 text-[var(--foreground)] hover:bg-[var(--foreground)]/5 rounded-lg transition">
             Privacy
@@ -143,7 +135,7 @@ export default function Header() {
       />
       
       {/* Header / Navbar */}
-      <header className="w-full border-b border-[var(--foreground)] border-opacity-10 bg-[var(--background)] sticky top-0 z-50">
+      <header className="w-full border-b border-[var(--border)] bg-[var(--background)] sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
@@ -156,7 +148,6 @@ export default function Header() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6 text-sm text-[var(--foreground)]">
             <Link href="/" className="hover:opacity-70 transition">Home</Link>
-            <Link href="/investors" className="hover:opacity-70 transition">Investor Boardview</Link>
             <Link href="/privacy" className="hover:opacity-70 transition">Privacy</Link>
             <Link href="/support" className="hover:opacity-70 transition">Support</Link>
             <Link href="/WaitList" className="hover:opacity-70 transition">Waitlist</Link>

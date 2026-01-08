@@ -231,7 +231,28 @@ export default function WaitlistPage() {
   const selectedCountry = countryCodes.find(c => c.code === countryCode);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] relative overflow-hidden">
+      {/* Background Gradient Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.15 }}
+          transition={{ duration: 1 }}
+          className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.12 }}
+          transition={{ duration: 1, delay: 0.2 }}
+          className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-gradient-to-bl from-cyan-400 to-blue-500 blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.1 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="absolute bottom-0 left-1/4 w-72 h-72 rounded-full bg-gradient-to-tr from-pink-500 to-rose-500 blur-3xl"
+        />
+      </div>
 
       {/* Header */}
       <header className="border-b border-[var(--foreground)]/10 bg-[var(--background)]/80 backdrop-blur-sm sticky top-0 z-50">
@@ -246,7 +267,7 @@ export default function WaitlistPage() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-24">
+      <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-24 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left side - Info */}
           <motion.div
@@ -254,14 +275,14 @@ export default function WaitlistPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--foreground)]/5 border border-[var(--foreground)]/10 mb-6">
-              <FaUsers className="text-[var(--foreground)]" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-500/10 to-cyan-500/10 border border-violet-500/20 mb-6">
+              <FaUsers className="text-violet-500" />
               <span className="text-sm font-medium">Join 2,000+ waiting</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
               Be the First to Experience{" "}
-              <span className="text-[var(--foreground)]">VELT</span>
+              <span className="bg-gradient-to-r from-violet-500 via-pink-500 to-cyan-500 bg-clip-text text-transparent">VELT</span>
             </h1>
 
             <p className="text-lg text-[var(--foreground)]/60 mb-8 leading-relaxed">
@@ -276,7 +297,9 @@ export default function WaitlistPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-[var(--foreground)]/5 border border-[var(--foreground)]/10"
+                  className={`flex items-start gap-3 p-4 rounded-xl border border-[var(--foreground)]/10 ${
+                    index === 0 ? "bg-gradient-to-br from-violet-500/10 to-purple-500/5" : "bg-gradient-to-br from-cyan-500/10 to-teal-500/5"
+                  }`}
                 >
                   <div 
                     className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--foreground)]/10"
@@ -353,7 +376,7 @@ export default function WaitlistPage() {
                       disabled={loading}
                     >
                       {countryCodes.map((country) => (
-                        <option key={country.code} value={country.code}>
+                        <option key={country.country} value={country.code}>
                           {country.flag} {country.code}
                         </option>
                       ))}

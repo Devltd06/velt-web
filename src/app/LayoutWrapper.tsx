@@ -10,17 +10,18 @@ export default function LayoutWrapper({
 }) {
   const pathname = usePathname();
   const isAdminPage = pathname?.startsWith('/admin');
+  const isHomePage = pathname === '/';
 
   return (
     <>
-      {/* Header / Navbar - Hidden on admin pages */}
-      {!isAdminPage && <Header />}
+      {/* Header / Navbar - Only shown on home page */}
+      {isHomePage && <Header />}
 
       {/* ✅ Page Content */}
       <main>{children}</main>
 
-      {/* ✅ Footer - Hidden on admin pages */}
-      {!isAdminPage && (
+      {/* ✅ Footer - Only shown on home page */}
+      {isHomePage && (
         <footer className="w-full border-t border-[var(--foreground)] border-opacity-10 bg-[var(--background)] mt-12">
           <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 text-sm text-[var(--foreground)] opacity-70 flex flex-col md:flex-row justify-between gap-4">
             <p>© {new Date().getFullYear()} VELT. All rights reserved.</p>

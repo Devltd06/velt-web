@@ -77,7 +77,29 @@ export default function PrivacyPolicyPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] relative overflow-hidden">
+      {/* Background Gradient Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.1 }}
+          transition={{ duration: 1 }}
+          className="absolute -top-32 left-1/4 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.08 }}
+          transition={{ duration: 1, delay: 0.2 }}
+          className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full bg-gradient-to-bl from-cyan-500 to-teal-600 blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.06 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="absolute top-1/2 -left-32 w-64 h-64 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 blur-3xl"
+        />
+      </div>
+
       {/* HEADER */}
       <header className="border-b border-[var(--foreground)]/10 sticky top-0 bg-[var(--background)]/80 backdrop-blur-sm z-50">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
@@ -90,7 +112,7 @@ export default function PrivacyPolicyPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 md:px-12 py-16 md:py-20">
+      <main className="max-w-4xl mx-auto px-6 md:px-12 py-16 md:py-20 relative z-10">
         {/* Hero Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }} 
@@ -98,14 +120,16 @@ export default function PrivacyPolicyPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--foreground)]/10 mb-6">
-            <FaShieldAlt className="text-2xl text-[var(--foreground)]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 mb-6">
+            <FaShieldAlt className="text-2xl text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Privacy <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent">Policy</span>
+          </h1>
           <p className="text-[var(--foreground)]/60 text-lg max-w-2xl mx-auto">
             Your privacy is fundamental to our service. This policy explains how we collect, use, and protect your personal information.
           </p>
-          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--foreground)]/5 text-sm text-[var(--foreground)]/70">
+          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 text-sm text-[var(--foreground)]/70">
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
             Last updated: December 2025
           </div>
@@ -116,7 +140,7 @@ export default function PrivacyPolicyPage() {
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1 }} 
           transition={{ delay: 0.2 }}
-          className="mb-12 p-6 rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.02]"
+          className="mb-12 p-6 rounded-xl border border-[var(--foreground)]/10 bg-gradient-to-br from-[var(--foreground)]/[0.03] to-transparent"
         >
           <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--foreground)]/50 mb-4">Contents</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -193,7 +217,7 @@ export default function PrivacyPolicyPage() {
               </p>
             </div>
             <a 
-              href="mailto:privacy@velt.app"
+              href="mailto:atmosdevltd@gmail.com"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[var(--background)] text-[var(--foreground)] font-semibold hover:opacity-90 transition whitespace-nowrap"
             >
               Contact Privacy Team

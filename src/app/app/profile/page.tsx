@@ -589,9 +589,17 @@ export default function ProfilePage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-green-400">
-                    <FaCheckCircle size={14} />
-                    <span className="text-sm">Active</span>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href="/website_payment"
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 hover:bg-white/20 transition"
+                    >
+                      Extend
+                    </Link>
+                    <div className="flex items-center gap-1 text-green-400">
+                      <FaCheckCircle size={14} />
+                      <span className="text-sm">Active</span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -610,11 +618,11 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <Link
-                    href="/subscription"
+                    href="/website_payment"
                     className="px-4 py-2 rounded-xl text-sm font-medium"
                     style={{ backgroundColor: VELT_ACCENT, color: "#000" }}
                   >
-                    Upgrade
+                    Get Signature
                   </Link>
                 </div>
               </motion.div>
@@ -1045,6 +1053,23 @@ export default function ProfilePage() {
                 </button>
               </div>
               <div className="p-6 space-y-4">
+                {/* Get Signature - Prominent CTA */}
+                <Link
+                  href="/website_payment"
+                  className="block p-4 rounded-xl transition"
+                  style={{ backgroundColor: `${VELT_ACCENT}20`, border: `1px solid ${VELT_ACCENT}40` }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FaCrown size={20} style={{ color: VELT_ACCENT }} />
+                      <div>
+                        <p className="font-semibold">Get Velt Signature</p>
+                        <p className="text-sm text-white/60">Unlock premium features</p>
+                      </div>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">Save!</span>
+                  </div>
+                </Link>
                 <Link
                   href="/app/settings/account"
                   className="block p-4 bg-white/5 rounded-xl hover:bg-white/10 transition"
@@ -1064,7 +1089,7 @@ export default function ProfilePage() {
                   Notifications
                 </Link>
                 <Link
-                  href="/renewal-subscription"
+                  href="/website_payment"
                   className="block p-4 bg-white/5 rounded-xl hover:bg-white/10 transition"
                 >
                   Subscription & Billing

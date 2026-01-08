@@ -17,6 +17,7 @@ import {
   FaLayerGroup,
   FaMapMarkerAlt,
   FaPaperPlane,
+  FaCrown,
 } from "react-icons/fa";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -30,6 +31,9 @@ interface Profile {
   full_name?: string | null;
   avatar_url?: string | null;
   role?: string | null;
+  is_signature?: boolean;
+  verified?: boolean;
+  subscription_ends_at?: string | null;
 }
 
 interface Story {
@@ -276,7 +280,7 @@ export default function HomePage() {
       // Load profile
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, username, full_name, avatar_url, role")
+        .select("id, username, full_name, avatar_url, role, is_signature, verified, subscription_ends_at")
         .eq("id", session.user.id)
         .single();
       

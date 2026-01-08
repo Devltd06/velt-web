@@ -30,9 +30,31 @@ export default function Support() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] relative overflow-hidden">
+      {/* Background Gradient Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.12 }}
+          transition={{ duration: 1 }}
+          className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.1 }}
+          transition={{ duration: 1, delay: 0.2 }}
+          className="absolute bottom-0 -left-32 w-80 h-80 rounded-full bg-gradient-to-tr from-violet-500 to-purple-600 blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.08 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="absolute top-1/2 right-1/4 w-64 h-64 rounded-full bg-gradient-to-bl from-pink-500 to-rose-600 blur-3xl"
+        />
+      </div>
+
       {/* HEADER */}
-      <header className="border-b border-[var(--foreground)]/10">
+      <header className="border-b border-[var(--foreground)]/10 relative z-10">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition">
             <FaArrowLeft size={16} />
@@ -44,34 +66,42 @@ export default function Support() {
       </header>
 
       {/* SUPPORT PAGE */}
-      <div className="max-w-4xl mx-auto px-6 md:px-12 py-20">
+      <div className="max-w-4xl mx-auto px-6 md:px-12 py-20 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Support & Feedback</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Support & <span className="bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 bg-clip-text text-transparent">Feedback</span>
+          </h1>
           <p className="text-lg text-[var(--foreground)]/60 mb-12">We would love to hear from you. Share your feedback, report issues, or send us your suggestions.</p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 bg-[var(--foreground)]/5 rounded-lg border border-[var(--foreground)]/10">
-            <div className="text-3xl mb-3">💬</div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-6 bg-gradient-to-br from-violet-500/10 to-purple-500/5 rounded-lg border border-violet-500/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-3">
+              <span className="text-xl">💬</span>
+            </div>
             <h3 className="font-bold text-lg mb-2">Feedback</h3>
             <p className="text-sm text-[var(--foreground)]/60">Tell us what you think about VELT. Your suggestions help us improve.</p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-6 bg-[var(--foreground)]/5 rounded-lg border border-[var(--foreground)]/10">
-            <div className="text-3xl mb-3">🐛</div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-6 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 rounded-lg border border-cyan-500/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mb-3">
+              <span className="text-xl">🐛</span>
+            </div>
             <h3 className="font-bold text-lg mb-2">Report Issues</h3>
             <p className="text-sm text-[var(--foreground)]/60">Found a bug? Let us know and we will fix it as soon as possible.</p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 bg-[var(--foreground)]/5 rounded-lg border border-[var(--foreground)]/10">
-            <div className="text-3xl mb-3">⭐</div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="p-6 bg-gradient-to-br from-teal-500/10 to-emerald-500/5 rounded-lg border border-teal-500/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center mb-3">
+              <span className="text-xl">⭐</span>
+            </div>
             <h3 className="font-bold text-lg mb-2">Complaints</h3>
             <p className="text-sm text-[var(--foreground)]/60">Share your concerns with us and we will address them right away.</p>
           </motion.div>
         </div>
 
         {/* FORM */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="bg-[var(--foreground)]/5 rounded-xl p-8 border border-[var(--foreground)]/10">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="bg-gradient-to-br from-[var(--foreground)]/5 to-transparent rounded-xl p-8 border border-[var(--foreground)]/10">
           <h2 className="text-2xl font-bold mb-6">Send us your message</h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -126,12 +156,37 @@ export default function Support() {
         </motion.div>
 
         {/* CONTACT INFO */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-16 p-8 bg-[var(--foreground)]/5 border border-[var(--foreground)]/10 rounded-lg">
-          <h3 className="text-2xl font-bold mb-4">Need Immediate Help?</h3>
-          <p className="text-[var(--foreground)]/60 mb-4">Email us directly or reach out through our social channels.</p>
-          <a href="mailto:support@velt.app" className="text-lg font-semibold hover:opacity-70 transition underline">
-            support@velt.app
-          </a>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-16 p-8 bg-gradient-to-br from-[var(--foreground)]/5 to-transparent border border-[var(--foreground)]/10 rounded-xl">
+          <h3 className="text-2xl font-bold mb-6">Need Immediate Help?</h3>
+          <p className="text-[var(--foreground)]/60 mb-6">Reach out to us directly through any of these channels.</p>
+          
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-[var(--foreground)]/50 mb-1">Email</p>
+              <a href="mailto:atmosdevltd@gmail.com" className="text-lg font-semibold hover:opacity-70 transition">
+                atmosdevltd@gmail.com
+              </a>
+            </div>
+            
+            <div>
+              <p className="text-sm text-[var(--foreground)]/50 mb-1">Phone</p>
+              <a href="tel:+233503540645" className="text-lg font-semibold hover:opacity-70 transition">
+                +233 050 354 0645
+              </a>
+            </div>
+            
+            <div className="pt-4">
+              <p className="text-sm text-[var(--foreground)]/50 mb-3">Follow Us</p>
+              <div className="flex gap-4">
+                <a href="https://instagram.com/VELT" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white text-sm font-medium hover:opacity-80 transition">
+                  @VELT
+                </a>
+                <a href="https://facebook.com/VELT_app" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:opacity-80 transition">
+                  VELT_app
+                </a>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
 

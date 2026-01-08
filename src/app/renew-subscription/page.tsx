@@ -193,9 +193,31 @@ export default function RenewSubscriptionPage() {
               .update({
                 subscription_plan: selectedPlan.id,
                 subscription_expires_at: newExpiry.toISOString(),
+                subscription_ends_at: newExpiry.toISOString(),
                 role: selectedPlan.id,
+                is_signature: true,
+                verified: true,
               })
               .eq("id", user.id);
+
+            // Try to record payment (table may not exist)
+            try {
+              await supabase.from("payments").insert({
+                user_id: user.id,
+                amount: selectedPlan.priceGHS * 100,
+                currency: "GHS",
+                status: "completed",
+                payment_type: "renewal",
+                metadata: {
+                  plan: selectedPlan.id,
+                  plan_name: selectedPlan.name,
+                  duration_months: 1,
+                },
+                completed_at: new Date().toISOString(),
+              });
+            } catch {
+              // Payment recording skipped
+            }
 
             setStep("success");
             setLoading(false);
